@@ -1,0 +1,12 @@
+plugins {
+
+}
+
+group = 'com.letzautomate'
+version = '1.0-SNAPSHOT'
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}

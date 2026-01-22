@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/bookingdb
+    username: booking
+    password: booking
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+  flyway:
+    enabled: true
+
+kafka:
+  bootstrap-servers: localhost:9092
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
