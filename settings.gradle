@@ -1,3 +1,4 @@
 rootProject.name = 'flight-booking-platform'
 include("services:booking-service")
 include("services:payment-service")
+include("services:inventory-service")

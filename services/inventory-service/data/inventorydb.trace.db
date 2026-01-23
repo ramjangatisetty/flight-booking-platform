@@ -1,0 +1,3 @@
+2026-01-23 05:43:47.372438-06:00 jdbc[14]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "intentory_items" not found; SQL statement:
+Select * from intentory_items [42102-224]
