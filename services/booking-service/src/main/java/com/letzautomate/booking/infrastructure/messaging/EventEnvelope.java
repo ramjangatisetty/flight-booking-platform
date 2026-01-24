@@ -1,20 +1,38 @@
 package com.letzautomate.booking.infrastructure.messaging;
 
-
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.Instant;
 import java.util.UUID;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EventEnvelope<T> {
 	public Meta meta;
 	public T data;
 
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class Meta {
-		public UUID eventId;
+
+		// inventory-service sends: eventName
+		// booking-service originally sends: eventType
+		@JsonAlias({"eventName", "eventType"})
 		public String eventType;
+
+		// inventory-service sends: version
+		// booking-service originally sends: eventVersion
+		@JsonAlias({"version", "eventVersion"})
 		public int eventVersion;
-		public UUID correlationId;
-		public String producer;
+
+		// inventory-service sends ISO string -> Instant parses fine
 		public Instant occurredAt;
+
+		// inventory-service sends UUID as string -> UUID parses fine
+		public UUID correlationId;
+
+		public String producer;
+
+		// booking-service may send this, inventory-service won’t
+		public UUID eventId;
 	}
 
 	public static <T> EventEnvelope<T> of(String eventType, int version, UUID correlationId, String producer, T data) {

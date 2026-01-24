@@ -7,7 +7,6 @@ import com.letzautomate.booking.application.BookingAppService;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,9 +28,16 @@ public class BookingController {
 		return bookingAppService.createBooking(request, correlationId);
 	}
 
+	// Full booking details
 	@GetMapping(value = "/{bookingId}", produces = "application/json")
 	public BookingResponse get(@PathVariable UUID bookingId) {
 		return bookingAppService.getBooking(bookingId);
+	}
+
+	// Lightweight polling endpoint (status + correlationId)
+	@GetMapping(value = "/{bookingId}/status", produces = "application/json")
+	public BookingStatusResponse getBookingStatus(@PathVariable UUID bookingId) {
+		return bookingAppService.getBookingStatus(bookingId);
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)
@@ -39,19 +45,4 @@ public class BookingController {
 	public String handleNotFound(IllegalArgumentException ex) {
 		return ex.getMessage();
 	}
-
-	/*@GetMapping("/{bookingId}")
-	public ResponseEntity<BookingStatusResponse> getBookingStatus(
-			@PathVariable UUID bookingId) {
-
-		return bookingAppService.getBookingStatus(bookingId)
-				.map(ResponseEntity::ok)
-				.orElse(ResponseEntity.notFound().build());
-	}*/
-
-	@GetMapping(value = "/{bookingId}/status", produces = "application/json")
-	public BookingStatusResponse getBookingStatus(@PathVariable UUID bookingId) {
-		return bookingAppService.getBookingStatus(bookingId);
-	}
-
 }

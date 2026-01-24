@@ -1,6 +1,5 @@
 package com.letzautomate.booking.infrastructure.messaging;
 
-
 import com.letzautomate.booking.domain.Booking;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -24,9 +23,14 @@ public class BookingEventPublisher {
 		payload.amount = booking.getAmount();
 		payload.currency = booking.getCurrency();
 
-		var envelope = EventEnvelope.of("booking.created", 1, booking.getCorrelationId(), "booking-service", payload);
+		var envelope = EventEnvelope.of(
+				"booking.created",
+				1,
+				booking.getCorrelationId(),
+				"booking-service",
+				payload
+		);
 
-		// key = bookingId to keep ordering
 		kafkaTemplate.send(TOPIC_BOOKING_CREATED_V1, booking.getBookingId().toString(), envelope);
 	}
 }

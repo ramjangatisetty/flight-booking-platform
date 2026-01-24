@@ -31,10 +31,7 @@ public class BookingAppService {
 	public BookingResponse createBooking(CreateBookingRequest req, UUID correlationIdHeader) {
 
 		UUID bookingId = UUID.randomUUID();
-		UUID correlationId = (correlationIdHeader != null)
-				? correlationIdHeader
-				: UUID.randomUUID();
-
+		UUID correlationId = (correlationIdHeader != null) ? correlationIdHeader : UUID.randomUUID();
 		Instant now = Instant.now();
 
 		Booking booking = new Booking(
@@ -62,7 +59,7 @@ public class BookingAppService {
 
 		repo.save(e);
 
-		// Publish booking.created.v1
+		// Publish booking.created.v1 (after save)
 		publisher.publishBookingCreated(booking);
 
 		return toResponse(e);
@@ -83,17 +80,72 @@ public class BookingAppService {
 	// -------------------------
 	@Transactional(readOnly = true)
 	public BookingStatusResponse getBookingStatus(UUID bookingId) {
-
 		BookingEntity e = repo.findById(bookingId)
-				.orElseThrow(() ->
-						new IllegalArgumentException("Booking not found: " + bookingId));
+				.orElseThrow(() -> new IllegalArgumentException("Booking not found: " + bookingId));
 
 		return new BookingStatusResponse(
 				e.getBookingId(),
 				e.getCorrelationId(),
-				e.getStatus(), // already stored as String
+				e.getStatus(),
 				e.getUpdatedAt() != null ? e.getUpdatedAt().toString() : null
 		);
+	}
+
+	// -------------------------
+	// Event handlers from inventory-service
+	// -------------------------
+
+	/**
+	 * inventory.reserved.v1 handler
+	 * NOTE: reservationId is not stored in BookingEntity yet; accepted for future use.
+	 */
+	@Transactional
+	public void markInventoryReserved(UUID bookingId, UUID correlationIdFromEvent, UUID reservationId) {
+		BookingEntity e = repo.findById(bookingId)
+				.orElseThrow(() -> new IllegalArgumentException("Booking not found: " + bookingId));
+
+		// idempotency / duplicates / late events
+		if (isTerminal(e.getStatus())) return;
+
+		// Keep correlationId stable; only set if null (optional)
+		if (e.getCorrelationId() == null && correlationIdFromEvent != null) {
+			e.setCorrelationId(correlationIdFromEvent);
+		}
+
+		e.setStatus("CONFIRMED");
+		e.setUpdatedAt(Instant.now());
+
+		// TODO (later): persist reservationId in BookingEntity if you add a column
+		repo.save(e);
+	}
+
+	/**
+	 * inventory.rejected.v1 handler
+	 * NOTE: reason is not stored in BookingEntity yet; accepted for future use.
+	 */
+	@Transactional
+	public void markInventoryRejected(UUID bookingId, UUID correlationIdFromEvent, String reason) {
+		BookingEntity e = repo.findById(bookingId)
+				.orElseThrow(() -> new IllegalArgumentException("Booking not found: " + bookingId));
+
+		if (isTerminal(e.getStatus())) return;
+
+		if (e.getCorrelationId() == null && correlationIdFromEvent != null) {
+			e.setCorrelationId(correlationIdFromEvent);
+		}
+
+		e.setStatus("REJECTED");
+		e.setUpdatedAt(Instant.now());
+
+		// TODO (later): persist reject reason if you add a column
+		repo.save(e);
+	}
+
+	private boolean isTerminal(String status) {
+		if (status == null) return false;
+		return "CONFIRMED".equalsIgnoreCase(status)
+				|| "REJECTED".equalsIgnoreCase(status)
+				|| "CANCELLED".equalsIgnoreCase(status);
 	}
 
 	// -------------------------
@@ -104,9 +156,7 @@ public class BookingAppService {
 		r.setBookingId(e.getBookingId());
 		r.setCorrelationId(e.getCorrelationId());
 		r.setFlightId(e.getFlightId());
-		r.setSeatClass(
-				com.letzautomate.booking.api.dto.SeatClass.valueOf(e.getSeatClass())
-		);
+		r.setSeatClass(com.letzautomate.booking.api.dto.SeatClass.valueOf(e.getSeatClass()));
 		r.setAmount(e.getAmount());
 		r.setCurrency(e.getCurrency());
 		r.setStatus(e.getStatus());
