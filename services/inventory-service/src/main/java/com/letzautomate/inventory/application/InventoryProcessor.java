@@ -8,6 +8,7 @@ import com.letzautomate.inventory.infrastructure.messaging.InventoryReservedEven
 import com.letzautomate.inventory.infrastructure.messaging.PaymentSucceededEvent;
 import com.letzautomate.inventory.infrastructure.persistence.BookingDetailsEntity;
 import com.letzautomate.inventory.infrastructure.persistence.BookingDetailsRepository;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,10 @@ public class InventoryProcessor {
 	private final BookingDetailsRepository bookingDetailsRepo;
 	private final ObjectMapper objectMapper;
 
+	// Demo-friendly: wait briefly for booking snapshot if payment arrives first
+	private static final int SNAPSHOT_MAX_ATTEMPTS = 10;      // 10 * 200ms = ~2s
+	private static final long SNAPSHOT_SLEEP_MS = 200L;
+
 	public InventoryProcessor(
 			InventoryService inventoryService,
 			InventoryEventPublisher publisher,
@@ -36,12 +41,7 @@ public class InventoryProcessor {
 	}
 
 	/**
-	 * Option B - Step 1:
-	 * Consume booking.created and store bookingId -> flightId, seatClass in H2.
-	 *
-	 * NOTE:
-	 * - We reuse "paymentSucceededListenerFactory" because your KafkaConfig defines only that factory.
-	 * - message.meta might be present or absent depending on producer; we don't require meta here.
+	 * Step 1: Consume booking.created and store bookingId -> flightId, seatClass in H2.
 	 */
 	@KafkaListener(
 			topics = TOPIC_BOOKING_CREATED_V1,
@@ -55,7 +55,6 @@ public class InventoryProcessor {
 
 		bookingDetailsRepo.findById(payload.bookingId())
 				.map(existing -> {
-					// Upsert (safe if the event is replayed)
 					existing.setFlightId(payload.flightId());
 					existing.setSeatClass(payload.seatClass());
 					return bookingDetailsRepo.save(existing);
@@ -70,8 +69,9 @@ public class InventoryProcessor {
 	}
 
 	/**
-	 * Option B - Step 2:
-	 * Consume payment.succeeded, lookup booking details from H2, reserve, publish inventory event.
+	 * Step 2: Consume payment.succeeded, lookup booking snapshot from H2, reserve, publish inventory event.
+	 *
+	 * FIX: If snapshot is missing (out-of-order across topics), wait briefly and retry.
 	 */
 	@KafkaListener(
 			topics = TOPIC_PAYMENT_SUCCEEDED_V1,
@@ -86,15 +86,21 @@ public class InventoryProcessor {
 		String key = payment.bookingId.toString();
 		UUID correlationId = safeCorrelationId(message);
 
-		var bookingDetailsOpt = bookingDetailsRepo.findById(payment.bookingId);
+		// Retry for a short time in case payment arrives before booking snapshot
+		Optional<BookingDetailsEntity> bookingDetailsOpt = waitForBookingSnapshot(payment.bookingId);
 		if (bookingDetailsOpt.isEmpty()) {
-			// Payment arrived but booking snapshot not found -> reject
+			// Still missing -> reject with explicit reason
+			InventoryRejectedEvent rej = new InventoryRejectedEvent();
+			rej.bookingId = payment.bookingId;
+			rej.status = "REJECTED";
+			rej.reason = "MISSING_BOOKING_SNAPSHOT";
+
 			var rejectedEnv = EventEnvelope.of(
 					"inventory.rejected",
 					1,
 					correlationId,
 					"inventory-service",
-					InventoryRejectedEvent.of(payment.bookingId)
+					rej
 			);
 			publisher.publishRejected(key, rejectedEnv);
 			return;
@@ -118,6 +124,7 @@ public class InventoryProcessor {
 			);
 			publisher.publishReserved(key, reservedEnv);
 		} else {
+			// Keep your existing reject (typically NO_SEATS from InventoryRejectedEvent.of)
 			var rejectedEnv = EventEnvelope.of(
 					"inventory.rejected",
 					1,
@@ -129,20 +136,31 @@ public class InventoryProcessor {
 		}
 	}
 
-	/*private UUID safeCorrelationId(EventEnvelope<?> message) {
-		if (message == null || message.meta == null || message.meta.correlationId == null) {
-			return UUID.randomUUID();
+	private Optional<BookingDetailsEntity> waitForBookingSnapshot(UUID bookingId) {
+		Optional<BookingDetailsEntity> found = bookingDetailsRepo.findById(bookingId);
+		if (found.isPresent()) return found;
+
+		for (int i = 0; i < SNAPSHOT_MAX_ATTEMPTS; i++) {
+			sleepQuietly(SNAPSHOT_SLEEP_MS);
+			found = bookingDetailsRepo.findById(bookingId);
+			if (found.isPresent()) return found;
 		}
-		return message.meta.correlationId;
-	}*/
+		return Optional.empty();
+	}
+
+	private void sleepQuietly(long ms) {
+		try {
+			Thread.sleep(ms);
+		} catch (InterruptedException ie) {
+			Thread.currentThread().interrupt();
+		}
+	}
 
 	private UUID safeCorrelationId(EventEnvelope<?> message) {
 		try {
 			if (message == null || message.meta == null || message.meta.correlationId == null) {
 				return UUID.randomUUID();
 			}
-
-			// correlationId may come as UUID or String → JsonNode
 			return UUID.fromString(message.meta.correlationId.asText());
 		} catch (Exception e) {
 			return UUID.randomUUID();
@@ -150,8 +168,7 @@ public class InventoryProcessor {
 	}
 
 	/**
-	 * Keep this record here (simplest) OR move it to infrastructure.messaging package if you prefer.
-	 * This must match the "data" shape of booking.created.v1.
+	 * Must match "data" shape of booking.created.v1.
 	 */
 	public record BookingCreatedPayload(
 			UUID bookingId,

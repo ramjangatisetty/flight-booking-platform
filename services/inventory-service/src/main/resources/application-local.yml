@@ -27,3 +27,12 @@ spring:
     consumer:
       group-id: inventory-service
       auto-offset-reset: latest
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,mappings,env
+  endpoint:
+    env:
+      show-values: ALWAYS

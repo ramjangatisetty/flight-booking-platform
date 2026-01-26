@@ -7,8 +7,7 @@ import java.util.UUID;
 @Entity
 @Table(
 		name = "inventory_reservations",
-		uniqueConstraints = @UniqueConstraint(name = "uq_reservation_booking",
-				columnNames = {"booking_id"})
+		uniqueConstraints = @UniqueConstraint(name = "uq_reservation_booking", columnNames = {"booking_id"})
 )
 public class InventoryReservationEntity {
 
@@ -28,6 +27,9 @@ public class InventoryReservationEntity {
 	@Column(name = "status", nullable = false)
 	private String status;
 
+	@Column(name = "reason")
+	private String reason;
+
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt = Instant.now();
 
@@ -44,6 +46,9 @@ public class InventoryReservationEntity {
 
 	public String getStatus() { return status; }
 	public void setStatus(String status) { this.status = status; }
+
+	public String getReason() { return reason; }
+	public void setReason(String reason) { this.reason = reason; }
 
 	public Instant getCreatedAt() { return createdAt; }
 }

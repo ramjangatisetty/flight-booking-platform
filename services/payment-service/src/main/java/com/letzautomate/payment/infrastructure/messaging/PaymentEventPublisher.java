@@ -15,11 +15,39 @@ public class PaymentEventPublisher {
 		this.kafkaTemplate = kafkaTemplate;
 	}
 
-	public void publishSucceeded(String bookingIdKey, EventEnvelope<PaymentSucceededEvent> envelope) {
-		kafkaTemplate.send(TOPIC_PAYMENT_SUCCEEDED_V1, bookingIdKey, envelope);
+	/** Publish payment.succeeded.v1 */
+	public void publishSucceeded(String key, EventEnvelope<PaymentSucceededEvent> envelope) {
+		kafkaTemplate.send(TOPIC_PAYMENT_SUCCEEDED_V1, key, envelope);
 	}
 
-	public void publishFailed(String bookingIdKey, EventEnvelope<PaymentFailedEvent> envelope) {
-		kafkaTemplate.send(TOPIC_PAYMENT_FAILED_V1, bookingIdKey, envelope);
+	/** Publish payment.failed.v1 */
+	public void publishFailed(String key, EventEnvelope<PaymentFailedEvent> envelope) {
+		kafkaTemplate.send(TOPIC_PAYMENT_FAILED_V1, key, envelope);
+	}
+
+	/**
+	 * Keep this convenience method if you still want it elsewhere.
+	 * Not required by PaymentProcessor (since it already builds payload+envelope).
+	 */
+	public void publishPaymentFailed(
+			java.util.UUID bookingId,
+			java.util.UUID correlationId,
+			java.util.UUID paymentId,
+			String provider,
+			String reasonCode,
+			String reasonMessage
+	) {
+		PaymentFailedEvent payload = new PaymentFailedEvent();
+		payload.bookingId = bookingId;
+		payload.paymentId = paymentId;
+		payload.provider = provider;
+		payload.status = "FAILED";
+		payload.reasonCode = reasonCode;
+		payload.reasonMessage = reasonMessage;
+
+		EventEnvelope<PaymentFailedEvent> envelope =
+				EventEnvelope.of("payment.failed", 1, correlationId, "payment-service", payload);
+
+		kafkaTemplate.send(TOPIC_PAYMENT_FAILED_V1, bookingId.toString(), envelope);
 	}
 }
