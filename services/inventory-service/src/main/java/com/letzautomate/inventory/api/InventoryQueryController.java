@@ -3,9 +3,7 @@ package com.letzautomate.inventory.api;
 import com.letzautomate.inventory.api.dto.InventoryReservationResponse;
 import com.letzautomate.inventory.infrastructure.persistence.InventoryReservationEntity;
 import com.letzautomate.inventory.infrastructure.persistence.InventoryReservationRepository;
-
 import java.util.UUID;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +22,7 @@ public class InventoryQueryController {
 		InventoryReservationEntity e = reservationRepo.findById(reservationId)
 				.orElseThrow(() ->
 						new IllegalArgumentException("Reservation not found for reservationId: " + reservationId));
+
 		return toResponse(e);
 	}
 
@@ -32,6 +31,7 @@ public class InventoryQueryController {
 		InventoryReservationEntity e = reservationRepo.findByBookingId(bookingId)
 				.orElseThrow(() ->
 						new IllegalArgumentException("Reservation not found for bookingId: " + bookingId));
+
 		return toResponse(e);
 	}
 

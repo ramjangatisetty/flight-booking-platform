@@ -7,7 +7,10 @@ import java.util.UUID;
 @Entity
 @Table(
 		name = "inventory_reservations",
-		uniqueConstraints = @UniqueConstraint(name = "uq_reservation_booking", columnNames = {"booking_id"})
+		uniqueConstraints = @UniqueConstraint(
+				name = "uq_reservation_booking",
+				columnNames = {"booking_id"}
+		)
 )
 public class InventoryReservationEntity {
 
@@ -27,6 +30,7 @@ public class InventoryReservationEntity {
 	@Column(name = "status", nullable = false)
 	private String status;
 
+	// ✅ NEW: store reject reason (NO_SEATS / INSUFFICIENT_FUNDS / MISSING_BOOKING_SNAPSHOT etc.)
 	@Column(name = "reason")
 	private String reason;
 

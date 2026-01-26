@@ -5,6 +5,7 @@ import com.letzautomate.inventory.infrastructure.messaging.EventEnvelope;
 import com.letzautomate.inventory.infrastructure.messaging.InventoryEventPublisher;
 import com.letzautomate.inventory.infrastructure.messaging.InventoryRejectedEvent;
 import com.letzautomate.inventory.infrastructure.messaging.InventoryReservedEvent;
+import com.letzautomate.inventory.infrastructure.messaging.PaymentFailedEvent;
 import com.letzautomate.inventory.infrastructure.messaging.PaymentSucceededEvent;
 import com.letzautomate.inventory.infrastructure.persistence.BookingDetailsEntity;
 import com.letzautomate.inventory.infrastructure.persistence.BookingDetailsRepository;
@@ -18,6 +19,7 @@ public class InventoryProcessor {
 
 	public static final String TOPIC_BOOKING_CREATED_V1 = "booking.created.v1";
 	public static final String TOPIC_PAYMENT_SUCCEEDED_V1 = "payment.succeeded.v1";
+	public static final String TOPIC_PAYMENT_FAILED_V1 = "payment.failed.v1";
 
 	private final InventoryService inventoryService;
 	private final InventoryEventPublisher publisher;
@@ -25,7 +27,7 @@ public class InventoryProcessor {
 	private final ObjectMapper objectMapper;
 
 	// Demo-friendly: wait briefly for booking snapshot if payment arrives first
-	private static final int SNAPSHOT_MAX_ATTEMPTS = 10;      // 10 * 200ms = ~2s
+	private static final int SNAPSHOT_MAX_ATTEMPTS = 10; // 10 * 200ms = ~2s
 	private static final long SNAPSHOT_SLEEP_MS = 200L;
 
 	public InventoryProcessor(
@@ -70,8 +72,7 @@ public class InventoryProcessor {
 
 	/**
 	 * Step 2: Consume payment.succeeded, lookup booking snapshot from H2, reserve, publish inventory event.
-	 *
-	 * FIX: If snapshot is missing (out-of-order across topics), wait briefly and retry.
+	 * If snapshot is missing (out-of-order across topics), wait briefly and retry.
 	 */
 	@KafkaListener(
 			topics = TOPIC_PAYMENT_SUCCEEDED_V1,
@@ -86,23 +87,9 @@ public class InventoryProcessor {
 		String key = payment.bookingId.toString();
 		UUID correlationId = safeCorrelationId(message);
 
-		// Retry for a short time in case payment arrives before booking snapshot
 		Optional<BookingDetailsEntity> bookingDetailsOpt = waitForBookingSnapshot(payment.bookingId);
 		if (bookingDetailsOpt.isEmpty()) {
-			// Still missing -> reject with explicit reason
-			InventoryRejectedEvent rej = new InventoryRejectedEvent();
-			rej.bookingId = payment.bookingId;
-			rej.status = "REJECTED";
-			rej.reason = "MISSING_BOOKING_SNAPSHOT";
-
-			var rejectedEnv = EventEnvelope.of(
-					"inventory.rejected",
-					1,
-					correlationId,
-					"inventory-service",
-					rej
-			);
-			publisher.publishRejected(key, rejectedEnv);
+			publishMissingSnapshotReject(key, correlationId, payment.bookingId);
 			return;
 		}
 
@@ -124,16 +111,89 @@ public class InventoryProcessor {
 			);
 			publisher.publishReserved(key, reservedEnv);
 		} else {
-			// Keep your existing reject (typically NO_SEATS from InventoryRejectedEvent.of)
+			InventoryRejectedEvent rej = new InventoryRejectedEvent();
+			rej.bookingId = payment.bookingId;
+			rej.status = "REJECTED";
+			rej.reason = (result.reason() == null || result.reason().isBlank()) ? "NO_SEATS" : result.reason();
+
 			var rejectedEnv = EventEnvelope.of(
 					"inventory.rejected",
 					1,
 					correlationId,
 					"inventory-service",
-					InventoryRejectedEvent.of(payment.bookingId)
+					rej
 			);
 			publisher.publishRejected(key, rejectedEnv);
 		}
+	}
+
+	/**
+	 * Payment failure flow:
+	 * Consume payment.failed and publish inventory.rejected with the payment reasonCode.
+	 * Inventory should NOT decrement seats here.
+	 */
+	@KafkaListener(
+			topics = TOPIC_PAYMENT_FAILED_V1,
+			containerFactory = "paymentSucceededListenerFactory"
+	)
+	public void onPaymentFailed(EventEnvelope<?> message) {
+		if (message == null || message.data == null) return;
+
+		PaymentFailedEvent payment = objectMapper.convertValue(message.data, PaymentFailedEvent.class);
+		if (payment == null || payment.bookingId == null) return;
+
+		String key = payment.bookingId.toString();
+		UUID correlationId = safeCorrelationId(message);
+
+		Optional<BookingDetailsEntity> bookingDetailsOpt = waitForBookingSnapshot(payment.bookingId);
+		if (bookingDetailsOpt.isEmpty()) {
+			publishMissingSnapshotReject(key, correlationId, payment.bookingId);
+			return;
+		}
+
+		var bookingDetails = bookingDetailsOpt.get();
+
+		String reason = (payment.reasonCode == null || payment.reasonCode.isBlank())
+				? "PAYMENT_FAILED"
+				: payment.reasonCode;
+
+		// Persist a REJECTED reservation with reason (no seat decrement)
+		inventoryService.reject(
+				payment.bookingId,
+				bookingDetails.getFlightId(),
+				bookingDetails.getSeatClass(),
+				reason
+		);
+
+		InventoryRejectedEvent rej = new InventoryRejectedEvent();
+		rej.bookingId = payment.bookingId;
+		rej.status = "REJECTED";
+		rej.reason = reason;
+
+		var rejectedEnv = EventEnvelope.of(
+				"inventory.rejected",
+				1,
+				correlationId,
+				"inventory-service",
+				rej
+		);
+		publisher.publishRejected(key, rejectedEnv);
+	}
+
+	private void publishMissingSnapshotReject(String key, UUID correlationId, UUID bookingId) {
+		InventoryRejectedEvent rej = new InventoryRejectedEvent();
+		rej.bookingId = bookingId;
+		rej.status = "REJECTED";
+		rej.reason = "MISSING_BOOKING_SNAPSHOT";
+
+		var rejectedEnv = EventEnvelope.of(
+				"inventory.rejected",
+				1,
+				correlationId,
+				"inventory-service",
+				rej
+		);
+		publisher.publishRejected(key, rejectedEnv);
 	}
 
 	private Optional<BookingDetailsEntity> waitForBookingSnapshot(UUID bookingId) {

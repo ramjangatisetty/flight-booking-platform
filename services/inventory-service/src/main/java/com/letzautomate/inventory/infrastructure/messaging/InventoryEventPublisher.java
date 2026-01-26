@@ -15,11 +15,11 @@ public class InventoryEventPublisher {
 		this.kafkaTemplate = kafkaTemplate;
 	}
 
-	public void publishReserved(String key, EventEnvelope env) {
+	public void publishReserved(String key, EventEnvelope<?> env) {
 		kafkaTemplate.send(TOPIC_INVENTORY_RESERVED_V1, key, env);
 	}
 
-	public void publishRejected(String key, EventEnvelope env) {
+	public void publishRejected(String key, EventEnvelope<?> env) {
 		kafkaTemplate.send(TOPIC_INVENTORY_REJECTED_V1, key, env);
 	}
 }

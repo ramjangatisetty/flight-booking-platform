@@ -4,12 +4,8 @@ import java.util.UUID;
 
 public class InventoryRejectedEvent {
 	public UUID bookingId;
-	public String status; // REJECTED
-	public String reason; // NO_SEATS / PAYMENT_FAILED / INSUFFICIENT_FUNDS / etc.
-
-	public static InventoryRejectedEvent of(UUID bookingId) {
-		return of(bookingId, "NO_SEATS");
-	}
+	public String status;  // REJECTED
+	public String reason;
 
 	public static InventoryRejectedEvent of(UUID bookingId, String reason) {
 		InventoryRejectedEvent e = new InventoryRejectedEvent();
