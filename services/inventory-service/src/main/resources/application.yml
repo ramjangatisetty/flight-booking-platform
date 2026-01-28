@@ -1,4 +1,8 @@
 spring:
+  application:
+    name: inventory-service
+  profiles:
+    active: local
   kafka:
     bootstrap-servers: localhost:9092
     consumer:

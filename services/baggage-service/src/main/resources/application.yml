@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: baggage-service
+  profiles:
+    active: local
+
+server:
+  port: 8085
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    com.letzautomate: INFO
+    org.springframework.web: INFO

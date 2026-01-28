@@ -1,5 +1,7 @@
 package com.letzautomate.inventory.infrastructure.persistence;
 
+import com.letzautomate.inventory.infrastructure.persistence.entity.InventoryItemEntity;
+import com.letzautomate.inventory.infrastructure.persistence.repository.InventoryItemRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:tns="http://letzautomate.com/loyalty/v1"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             targetNamespace="http://letzautomate.com/loyalty/v1"
+             name="LoyaltyService">
+
+    <types>
+        <xsd:schema targetNamespace="http://letzautomate.com/loyalty/v1">
+            <xsd:import namespace="http://letzautomate.com/loyalty/v1" schemaLocation="loyalty.xsd"/>
+        </xsd:schema>
+    </types>
+
+    <!-- EnrollMember Messages -->
+    <message name="EnrollMemberRequest">
+        <part name="request" element="tns:EnrollMemberRequest"/>
+    </message>
+    <message name="EnrollMemberResponse">
+        <part name="response" element="tns:EnrollMemberResponse"/>
+    </message>
+
+    <!-- GetMemberStatus Messages -->
+    <message name="GetMemberStatusRequest">
+        <part name="request" element="tns:GetMemberStatusRequest"/>
+    </message>
+    <message name="GetMemberStatusResponse">
+        <part name="response" element="tns:GetMemberStatusResponse"/>
+    </message>
+
+    <!-- AccruePoints Messages -->
+    <message name="AccruePointsRequest">
+        <part name="request" element="tns:AccruePointsRequest"/>
+    </message>
+    <message name="AccruePointsResponse">
+        <part name="response" element="tns:AccruePointsResponse"/>
+    </message>
+
+    <!-- Fault Messages -->
+    <message name="LoyaltyFault">
+        <part name="fault" element="tns:LoyaltyFault"/>
+    </message>
+
+    <!-- Port Type -->
+    <portType name="LoyaltyPort">
+        <operation name="EnrollMember">
+            <input message="tns:EnrollMemberRequest"/>
+            <output message="tns:EnrollMemberResponse"/>
+            <fault name="LoyaltyFault" message="tns:LoyaltyFault"/>
+        </operation>
+        <operation name="GetMemberStatus">
+            <input message="tns:GetMemberStatusRequest"/>
+            <output message="tns:GetMemberStatusResponse"/>
+            <fault name="LoyaltyFault" message="tns:LoyaltyFault"/>
+        </operation>
+        <operation name="AccruePoints">
+            <input message="tns:AccruePointsRequest"/>
+            <output message="tns:AccruePointsResponse"/>
+            <fault name="LoyaltyFault" message="tns:LoyaltyFault"/>
+        </operation>
+    </portType>
+
+    <!-- Binding -->
+    <binding name="LoyaltySoapBinding" type="tns:LoyaltyPort">
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="EnrollMember">
+            <soap:operation soapAction="http://letzautomate.com/loyalty/v1/EnrollMember"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+            <fault name="LoyaltyFault">
+                <soap:fault name="LoyaltyFault" use="literal"/>
+            </fault>
+        </operation>
+        <operation name="GetMemberStatus">
+            <soap:operation soapAction="http://letzautomate.com/loyalty/v1/GetMemberStatus"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+            <fault name="LoyaltyFault">
+                <soap:fault name="LoyaltyFault" use="literal"/>
+            </fault>
+        </operation>
+        <operation name="AccruePoints">
+            <soap:operation soapAction="http://letzautomate.com/loyalty/v1/AccruePoints"/>
+            <input>
+                <soap:body use="literal"/>
+            </input>
+            <output>
+                <soap:body use="literal"/>
+            </output>
+            <fault name="LoyaltyFault">
+                <soap:fault name="LoyaltyFault" use="literal"/>
+            </fault>
+        </operation>
+    </binding>
+
+    <!-- Service -->
+    <service name="LoyaltyService">
+        <port name="LoyaltyPort" binding="tns:LoyaltySoapBinding">
+            <soap:address location="http://localhost:8084/ws"/>
+        </port>
+    </service>
+</definitions>

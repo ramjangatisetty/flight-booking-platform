@@ -2,6 +2,7 @@ package com.letzautomate.booking.api.dto;
 
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public class CreateBookingRequest {
 
@@ -17,6 +18,9 @@ public class CreateBookingRequest {
 	@NotBlank @Pattern(regexp = "^[A-Z]{3}$")
 	private String currency; // Phase 1: "USD"
 
+	// Optional: loyalty member ID for points accrual
+	private UUID memberId;
+
 	public String getFlightId() { return flightId; }
 	public void setFlightId(String flightId) { this.flightId = flightId; }
 
@@ -28,5 +32,8 @@ public class CreateBookingRequest {
 
 	public String getCurrency() { return currency; }
 	public void setCurrency(String currency) { this.currency = currency; }
+
+	public UUID getMemberId() { return memberId; }
+	public void setMemberId(UUID memberId) { this.memberId = memberId; }
 }
 

@@ -1,4 +1,24 @@
+server:
+  port: 8083
+
 spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5435/paymentdb
+    username: payment
+    password: payment
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+    show-sql: false
+
+  flyway:
+    enabled: true
+
   kafka:
     bootstrap-servers: localhost:9092
     consumer:
@@ -8,5 +28,5 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
-        spring.json.use.type.headers: false   # ✅ add this
-        spring.json.value.default.type: com.letzautomate.payment.infrastructure.messaging.EventEnvelope
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.letzautomate.payment.infrastructure.messaging.event.EventEnvelope

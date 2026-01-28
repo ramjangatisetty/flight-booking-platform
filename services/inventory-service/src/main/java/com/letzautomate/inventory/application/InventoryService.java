@@ -1,6 +1,10 @@
 package com.letzautomate.inventory.application;
 
-import com.letzautomate.inventory.infrastructure.persistence.*;
+import com.letzautomate.inventory.infrastructure.persistence.entity.InventoryItemEntity;
+import com.letzautomate.inventory.infrastructure.persistence.entity.InventoryReservationEntity;
+import com.letzautomate.inventory.infrastructure.persistence.repository.BookingDetailsRepository;
+import com.letzautomate.inventory.infrastructure.persistence.repository.InventoryItemRepository;
+import com.letzautomate.inventory.infrastructure.persistence.repository.InventoryReservationRepository;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -25,8 +29,10 @@ public class InventoryService {
 
 	/**
 	 * Reserve a seat for a booking.
-	 * - RESERVED: seats decremented and reservation stored
-	 * - REJECTED: reservation stored with reason (e.g. NO_SEATS)
+	 * - RESERVED: seats decremented and reservation entity created
+	 * - REJECTED: NO reservation entity created, only audit log
+	 * 
+	 * Reservation table rows only exist for RESERVED/RELEASED status.
 	 */
 	@Transactional
 	public ReserveResult reserve(UUID bookingId, String flightId, String seatClass) {
@@ -42,32 +48,24 @@ public class InventoryService {
 				.orElse(null);
 
 		if (item == null) {
-			// treat missing inventory row as no seats (demo-friendly)
-			InventoryReservationEntity rej = new InventoryReservationEntity();
-			rej.setBookingId(bookingId);
-			rej.setFlightId(flightId);
-			rej.setSeatClass(seatClass);
-			rej.setStatus("REJECTED");
-			rej.setReason("NO_SEATS");
-			InventoryReservationEntity saved = reservationRepo.save(rej);
-			return new ReserveResult(saved.getStatus(), saved.getReservationId(), saved.getReason());
+			// No inventory item found - reject without creating reservation entity
+			System.out.println("⚠ No inventory item found for " + flightId + "/" + seatClass + 
+			                   " - rejecting booking " + bookingId + " (reason: FLIGHT_NOT_FOUND)");
+			return new ReserveResult("REJECTED", null, "FLIGHT_NOT_FOUND");
 		}
 
 		if (item.getAvailableSeats() <= 0) {
-			InventoryReservationEntity rej = new InventoryReservationEntity();
-			rej.setBookingId(bookingId);
-			rej.setFlightId(flightId);
-			rej.setSeatClass(seatClass);
-			rej.setStatus("REJECTED");
-			rej.setReason("NO_SEATS");
-			InventoryReservationEntity saved = reservationRepo.save(rej);
-			return new ReserveResult(saved.getStatus(), saved.getReservationId(), saved.getReason());
+			// No seats available - reject without creating reservation entity
+			System.out.println("⚠ No seats available for " + flightId + "/" + seatClass + 
+			                   " - rejecting booking " + bookingId + " (reason: NO_SEATS)");
+			return new ReserveResult("REJECTED", null, "NO_SEATS");
 		}
 
-		// decrement seats (optimistic lock via @Version)
+		// SUCCESS: decrement seats (optimistic lock via @Version)
 		item.setAvailableSeats(item.getAvailableSeats() - 1);
 		itemRepo.save(item);
 
+		// Create reservation entity ONLY for successful reservations
 		InventoryReservationEntity res = new InventoryReservationEntity();
 		res.setBookingId(bookingId);
 		res.setFlightId(flightId);
@@ -76,42 +74,34 @@ public class InventoryService {
 		res.setReason(null);
 
 		InventoryReservationEntity saved = reservationRepo.save(res);
+		
+		System.out.println("✓ Created reservation " + saved.getReservationId() + 
+		                   " for booking " + bookingId + " (" + flightId + "/" + seatClass + ")");
+		
 		return new ReserveResult(saved.getStatus(), saved.getReservationId(), saved.getReason());
 	}
 
 	/**
-	 * Explicit rejection path (used for payment.failed or other upstream failures).
-	 * This should NOT decrement inventory seats.
+	 * Explicit rejection path (deprecated - no longer creates reservation entities).
+	 * Rejections are now handled inline in reserve() without persisting.
+	 * This method is kept for backward compatibility but does nothing.
 	 */
+	@Deprecated
 	@Transactional
 	public ReserveResult reject(UUID bookingId, String flightId, String seatClass, String reason) {
+		
+		System.out.println("⚠ reject() called for booking " + bookingId + 
+		                   " - this method is deprecated and does not create reservation entities");
 
-		// Idempotency: if reservation already exists for bookingId, don’t create duplicates
+		// Idempotency: if reservation already exists for bookingId, return it
 		Optional<InventoryReservationEntity> existing = reservationRepo.findByBookingId(bookingId);
 		if (existing.isPresent()) {
 			InventoryReservationEntity e = existing.get();
-
-			// If it was RESERVED already, don’t downgrade it in MVP (keep stable)
-			// If you want compensation later, that’s a different feature.
-			if ("RESERVED".equalsIgnoreCase(e.getStatus())) {
-				return new ReserveResult(e.getStatus(), e.getReservationId(), e.getReason());
-			}
-
-			e.setStatus("REJECTED");
-			e.setReason(reason);
-			InventoryReservationEntity saved = reservationRepo.save(e);
-			return new ReserveResult(saved.getStatus(), saved.getReservationId(), saved.getReason());
+			return new ReserveResult(e.getStatus(), e.getReservationId(), e.getReason());
 		}
 
-		InventoryReservationEntity rej = new InventoryReservationEntity();
-		rej.setBookingId(bookingId);
-		rej.setFlightId(flightId);
-		rej.setSeatClass(seatClass);
-		rej.setStatus("REJECTED");
-		rej.setReason(reason);
-
-		InventoryReservationEntity saved = reservationRepo.save(rej);
-		return new ReserveResult(saved.getStatus(), saved.getReservationId(), saved.getReason());
+		// No reservation entity created for rejections
+		return new ReserveResult("REJECTED", null, reason);
 	}
 
 	// -----------------------------
@@ -141,4 +131,77 @@ public class InventoryService {
 	 * ReserveResult now supports reason() -> fixes your compile error #1.
 	 */
 	public record ReserveResult(String status, UUID reservationId, String reason) {}
+
+	/**
+	 * Release a reservation (compensation for payment failure).
+	 * - Looks up reservation by reservationId or bookingId
+	 * - Marks it as RELEASED
+	 * - Increments seat availability
+	 * - Idempotent: if already released, does nothing
+	 */
+	@Transactional
+	public ReleaseResult release(UUID bookingId, UUID reservationId) {
+
+		// Try to find reservation by reservationId first, then by bookingId
+		Optional<InventoryReservationEntity> reservationOpt = Optional.empty();
+		
+		if (reservationId != null) {
+			reservationOpt = reservationRepo.findById(reservationId);
+		}
+		
+		if (reservationOpt.isEmpty() && bookingId != null) {
+			reservationOpt = reservationRepo.findByBookingId(bookingId);
+		}
+
+		if (reservationOpt.isEmpty()) {
+			// No reservation found - might have been deleted or never created (rejection case)
+			System.out.println("⚠ No reservation found for bookingId: " + bookingId + 
+			                   ", reservationId: " + reservationId + 
+			                   " - likely a rejection, treating as already released");
+			return new ReleaseResult("RELEASED", reservationId, "NOT_FOUND");
+		}
+
+		InventoryReservationEntity reservation = reservationOpt.get();
+
+		// Idempotency: if already released, return success
+		if ("RELEASED".equalsIgnoreCase(reservation.getStatus())) {
+			System.out.println("✓ Reservation " + reservation.getReservationId() + 
+			                   " already RELEASED - idempotent operation");
+			return new ReleaseResult("RELEASED", reservation.getReservationId(), "ALREADY_RELEASED");
+		}
+
+		// Only release if it was RESERVED
+		if (!"RESERVED".equalsIgnoreCase(reservation.getStatus())) {
+			System.out.println("⚠ Reservation " + reservation.getReservationId() + 
+			                   " has status " + reservation.getStatus() + " - not releasing");
+			return new ReleaseResult(reservation.getStatus(), reservation.getReservationId(), "NOT_RESERVED");
+		}
+
+		// Increment seat availability
+		InventoryItemEntity item = itemRepo.findByFlightIdAndSeatClass(
+				reservation.getFlightId(), 
+				reservation.getSeatClass()
+		).orElse(null);
+
+		if (item != null) {
+			item.setAvailableSeats(item.getAvailableSeats() + 1);
+			itemRepo.save(item);
+			System.out.println("✓ Incremented seat availability for " + reservation.getFlightId() + 
+			                   "/" + reservation.getSeatClass() + " - now " + item.getAvailableSeats());
+		} else {
+			System.out.println("⚠ Inventory item not found for " + reservation.getFlightId() + 
+			                   "/" + reservation.getSeatClass() + " - cannot increment seats");
+		}
+
+		// Mark reservation as RELEASED
+		reservation.setStatus("RELEASED");
+		reservationRepo.save(reservation);
+
+		System.out.println("✓ Released reservation " + reservation.getReservationId() + 
+		                   " for booking " + bookingId);
+
+		return new ReleaseResult("RELEASED", reservation.getReservationId(), null);
+	}
+
+	public record ReleaseResult(String status, UUID reservationId, String reason) {}
 }

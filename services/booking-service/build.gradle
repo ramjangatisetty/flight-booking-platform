@@ -27,6 +27,14 @@ dependencies {
     implementation 'org.flywaydb:flyway-core'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
 
+    // SOAP Client for loyalty-service integration
+    implementation 'org.springframework.boot:spring-boot-starter-web-services'
+    implementation 'org.glassfish.jaxb:jaxb-runtime'
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
+    
+    // Logging (should be included via spring-boot-starter, but adding explicitly)
+    implementation 'org.slf4j:slf4j-api'
+
     // OpenAPI / Swagger (code-first)
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 

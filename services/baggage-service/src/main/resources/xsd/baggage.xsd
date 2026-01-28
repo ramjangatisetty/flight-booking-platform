@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://letzautomate.com/baggage/v1"
+           xmlns:tns="http://letzautomate.com/baggage/v1"
+           elementFormDefault="qualified">
+
+    <!-- Bag Tag Pattern: [A-Z]{2}[0-9]{8} -->
+    <xs:simpleType name="BagTagType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[A-Z]{2}[0-9]{8}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Airport Code Pattern: [A-Z]{3} -->
+    <xs:simpleType name="AirportCodeType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[A-Z]{3}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Status Enum -->
+    <xs:simpleType name="BagStatusType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="CHECKED_IN"/>
+            <xs:enumeration value="LOADED"/>
+            <xs:enumeration value="IN_TRANSIT"/>
+            <xs:enumeration value="ARRIVED"/>
+            <xs:enumeration value="DELIVERED"/>
+            <xs:enumeration value="LOST"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Baggage Checkin Request -->
+    <xs:element name="BaggageCheckinRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="bookingId" type="xs:string"/>
+                <xs:element name="passengerId" type="xs:string"/>
+                <xs:element name="bagTag" type="tns:BagTagType"/>
+                <xs:element name="origin" type="tns:AirportCodeType"/>
+                <xs:element name="destination" type="tns:AirportCodeType"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Baggage Checkin Response -->
+    <xs:element name="BaggageCheckinResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="bagTag" type="tns:BagTagType"/>
+                <xs:element name="status" type="tns:BagStatusType"/>
+                <xs:element name="acceptedAt" type="xs:dateTime"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Baggage Status Update Request -->
+    <xs:element name="BaggageStatusUpdateRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="tns:BagStatusType"/>
+                <xs:element name="airport" type="tns:AirportCodeType" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Baggage Status Update Response -->
+    <xs:element name="BaggageStatusUpdateResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="bagTag" type="tns:BagTagType"/>
+                <xs:element name="status" type="tns:BagStatusType"/>
+                <xs:element name="updatedAt" type="xs:dateTime"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Baggage Event -->
+    <xs:complexType name="BaggageEventType">
+        <xs:sequence>
+            <xs:element name="eventType" type="tns:BagStatusType"/>
+            <xs:element name="airport" type="tns:AirportCodeType" minOccurs="0"/>
+            <xs:element name="occurredAt" type="xs:dateTime"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Baggage Track Response -->
+    <xs:element name="BaggageTrackResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="bagTag" type="tns:BagTagType"/>
+                <xs:element name="status" type="tns:BagStatusType"/>
+                <xs:element name="events" type="tns:BaggageEventType" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Error Response -->
+    <xs:element name="Error">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="code" type="xs:string"/>
+                <xs:element name="message" type="xs:string"/>
+                <xs:element name="bagTag" type="xs:string" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Admin Seed Response -->
+    <xs:element name="SeedResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="bagTag" type="tns:BagTagType"/>
+                <xs:element name="message" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

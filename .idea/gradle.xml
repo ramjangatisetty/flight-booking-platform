@@ -10,8 +10,10 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/services" />
+            <option value="$PROJECT_DIR$/services/baggage-service" />
             <option value="$PROJECT_DIR$/services/booking-service" />
             <option value="$PROJECT_DIR$/services/inventory-service" />
+            <option value="$PROJECT_DIR$/services/loyalty-service" />
             <option value="$PROJECT_DIR$/services/payment-service" />
           </set>
         </option>
