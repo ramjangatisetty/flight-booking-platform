@@ -1,0 +1,122 @@
+[
+  {
+    "iata": "JFK",
+    "city": "New York",
+    "name": "John F. Kennedy International Airport",
+    "country": "US"
+  },
+  {
+    "iata": "LAX",
+    "city": "Los Angeles",
+    "name": "Los Angeles International Airport",
+    "country": "US"
+  },
+  {
+    "iata": "LHR",
+    "city": "London",
+    "name": "London Heathrow Airport",
+    "country": "GB"
+  },
+  {
+    "iata": "CDG",
+    "city": "Paris",
+    "name": "Charles de Gaulle Airport",
+    "country": "FR"
+  },
+  {
+    "iata": "FRA",
+    "city": "Frankfurt",
+    "name": "Frankfurt Airport",
+    "country": "DE"
+  },
+  {
+    "iata": "DXB",
+    "city": "Dubai",
+    "name": "Dubai International Airport",
+    "country": "AE"
+  },
+  {
+    "iata": "SIN",
+    "city": "Singapore",
+    "name": "Singapore Changi Airport",
+    "country": "SG"
+  },
+  {
+    "iata": "HND",
+    "city": "Tokyo",
+    "name": "Tokyo Haneda Airport",
+    "country": "JP"
+  },
+  {
+    "iata": "SYD",
+    "city": "Sydney",
+    "name": "Sydney Kingsford Smith Airport",
+    "country": "AU"
+  },
+  {
+    "iata": "ORD",
+    "city": "Chicago",
+    "name": "O'Hare International Airport",
+    "country": "US"
+  },
+  {
+    "iata": "ATL",
+    "city": "Atlanta",
+    "name": "Hartsfield-Jackson Atlanta International Airport",
+    "country": "US"
+  },
+  {
+    "iata": "DFW",
+    "city": "Dallas",
+    "name": "Dallas/Fort Worth International Airport",
+    "country": "US"
+  },
+  {
+    "iata": "AMS",
+    "city": "Amsterdam",
+    "name": "Amsterdam Airport Schiphol",
+    "country": "NL"
+  },
+  {
+    "iata": "MAD",
+    "city": "Madrid",
+    "name": "Adolfo Suárez Madrid-Barajas Airport",
+    "country": "ES"
+  },
+  {
+    "iata": "BCN",
+    "city": "Barcelona",
+    "name": "Barcelona-El Prat Airport",
+    "country": "ES"
+  },
+  {
+    "iata": "MUC",
+    "city": "Munich",
+    "name": "Munich Airport",
+    "country": "DE"
+  },
+  {
+    "iata": "FCO",
+    "city": "Rome",
+    "name": "Leonardo da Vinci-Fiumicino Airport",
+    "country": "IT"
+  },
+  {
+    "iata": "YYZ",
+    "city": "Toronto",
+    "name": "Toronto Pearson International Airport",
+    "country": "CA"
+  },
+  {
+    "iata": "MEX",
+    "city": "Mexico City",
+    "name": "Mexico City International Airport",
+    "country": "MX"
+  },
+  {
+    "iata": "GRU",
+    "city": "São Paulo",
+    "name": "São Paulo/Guarulhos International Airport",
+    "country": "BR"
+  }
+]
