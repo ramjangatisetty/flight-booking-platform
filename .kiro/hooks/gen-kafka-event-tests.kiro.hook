@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Generate Kafka Event Tests",
+  "description": "Generates Kafka event verification tests for a specified service. Tests verify that events are correctly published to Kafka after API operations.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "You are the GenKafkaEventTests agent. Follow these documents strictly:\n1. prompts/TEST_GENERATION_BLUEPRINT.md\n2. prompts/00-agent-operating-rules.md\n3. prompts/13-generate-kafka-event-tests.md\n\nTASK: Generate Kafka event verification tests.\n\nAsk the user which service to generate tests for:\n- booking-service (booking.events topic)\n- inventory-service (inventory.events topic)\n- payment-service (payment.events topic)\n\nThen generate the appropriate event tests following the prompt guidelines.\n\nSCOPE: tests/events/** only.\nOUTPUT: Diffs only."
+  }
+}

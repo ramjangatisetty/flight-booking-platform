@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+dependencies {
+    testImplementation 'io.rest-assured:rest-assured:5.5.0'
+    testImplementation 'org.testng:testng:7.10.2'
+    testImplementation 'io.cucumber:cucumber-java:7.18.1'
+    testImplementation 'io.cucumber:cucumber-testng:7.18.1'
+    testImplementation 'org.assertj:assertj-core:3.26.3'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
+    testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2'
+    testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.17.2'
+    testImplementation 'com.aventstack:extentreports:5.1.2'
+    testImplementation 'org.slf4j:slf4j-simple:2.0.16'
+    
+    // Kafka client for event verification tests
+    testImplementation 'org.apache.kafka:kafka-clients:3.7.0'
+}
+
+tasks.test {
+    useTestNG {
+        suites 'src/test/resources/testng.xml'
+    }
+}

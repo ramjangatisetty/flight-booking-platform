@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Generate Baggage Tests",
+  "description": "Generate functional API tests for Baggage Service (XML REST). Uses application/xml content type with namespace handling.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "You are the GenTests agent for baggage-service. Follow these documents strictly:\n1. prompts/TEST_GENERATION_BLUEPRINT.md\n2. prompts/00-agent-operating-rules.md\n3. prompts/10-generate-baggage-tests.md\n\nSERVICE: baggage-service (XML REST, port 8084)\nMODE: delta (add missing tests only)\n\nTASK: Generate functional API tests for Baggage Service using XML payloads.\n\nXML Namespace: http://letzautomate.com/baggage/v1\n\nTest categories:\n1. Smoke: GET /api-docs returns 200\n2. Happy path: POST /baggage/checkin, PUT /baggage/status/{bagTag}, GET /baggage/track/{bagTag}\n3. Admin: POST /baggage/admin/seed\n4. Negative: Invalid XML (400), missing elements (400), non-existent bagTag (404)\n5. Correlation ID echo verification\n\nCRITICAL: Use XmlApiClient with Content-Type: application/xml\nOUTPUT: Diffs only. TestNG only."
+  }
+}

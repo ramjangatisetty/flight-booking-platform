@@ -302,6 +302,163 @@ This implementation plan covers Phase 0 (project infrastructure and scaffolding)
     - Confirm no test failures or errors
     - _Requirements: 12.5, 12.6_
 
+## Phase 2: Backend Integration and Real Flight Search
+
+- [ ] 15. Create API service layer
+  - [ ] 15.1 Create src/services/inventoryService.ts
+    - Implement searchFlights function that calls inventory service API
+    - Use Axios client from src/config/axios.ts
+    - Set Content-Type: application/json for inventory service
+    - Parse search criteria and format as API request
+    - Handle API errors and return typed response
+    - _Requirements: TBD_
+  
+  - [ ] 15.2 Create src/domain/types.ts additions for API responses
+    - Define Flight interface (flightId, flightNumber, airline, origin, destination, departTime, arriveTime, duration, price, currency, cabinClass, availableSeats, stops)
+    - Define SearchFlightsRequest interface
+    - Define SearchFlightsResponse interface
+    - _Requirements: TBD_
+
+- [ ] 16. Integrate React Query for flight search
+  - [ ] 16.1 Create src/hooks/useFlightSearch.ts
+    - Implement useQuery hook for flight search
+    - Use inventoryService.searchFlights as query function
+    - Configure query key based on search criteria
+    - Handle loading, error, and success states
+    - Enable query only when search criteria are valid
+    - _Requirements: TBD_
+  
+  - [ ] 16.2 Update ResultsPage to use useFlightSearch hook
+    - Remove mock data generation
+    - Use useFlightSearch hook with query parameters
+    - Display loading spinner while fetching
+    - Display error message if API call fails
+    - Display "No flights found" if results are empty
+    - Display flight cards when data is available
+    - _Requirements: TBD_
+
+- [ ] 17. Enhance flight result cards
+  - [ ] 17.1 Create src/components/results/FlightCard.tsx
+    - Extract flight card from ResultsPage into reusable component
+    - Accept Flight interface as prop
+    - Display all flight details (airline logo, flight number, times, duration, stops, price)
+    - Add "Select" button with data-testid
+    - Apply premium card styling consistent with theme
+    - _Requirements: TBD_
+  
+  - [ ] 17.2 Add flight details expansion
+    - Add expandable section for additional flight details
+    - Show baggage allowance, aircraft type, meal service
+    - Use MUI Accordion or Collapse component
+    - Maintain accessibility with proper ARIA attributes
+    - _Requirements: TBD_
+
+- [ ] 18. Implement sorting and filtering
+  - [ ] 18.1 Create src/components/results/SortFilterBar.tsx
+    - Add sort dropdown (Price: Low to High, Price: High to Low, Duration: Shortest, Departure: Earliest, Departure: Latest)
+    - Add filter checkboxes (Direct flights only, Specific airlines, Departure time ranges)
+    - Apply filters and sorting to flight results
+    - Persist filter/sort state in URL query parameters
+    - Assign data-testid to all interactive elements
+    - _Requirements: TBD_
+  
+  - [ ] 18.2 Implement client-side filtering and sorting logic
+    - Create utility functions for sorting flights
+    - Create utility functions for filtering flights
+    - Apply filters and sorting to API results
+    - Update ResultsPage to use SortFilterBar
+    - _Requirements: TBD_
+
+- [ ] 19. Add pagination for large result sets
+  - [ ] 19.1 Implement pagination component
+    - Use MUI Pagination component
+    - Display page numbers and navigation controls
+    - Show results count (e.g., "Showing 1-10 of 45 flights")
+    - Persist current page in URL query parameters
+    - Assign data-testid to pagination controls
+    - _Requirements: TBD_
+  
+  - [ ] 19.2 Implement pagination logic
+    - Paginate flight results (10 flights per page)
+    - Update ResultsPage to display paginated results
+    - Scroll to top when page changes
+    - _Requirements: TBD_
+
+- [ ] 20. Error handling and loading states
+  - [ ] 20.1 Create src/components/common/LoadingSpinner.tsx
+    - Create reusable loading spinner component
+    - Use MUI CircularProgress with centered layout
+    - Add descriptive text (e.g., "Searching for flights...")
+    - Assign data-testid for testing
+    - _Requirements: TBD_
+  
+  - [ ] 20.2 Create src/components/common/ErrorMessage.tsx
+    - Create reusable error message component
+    - Accept error message and retry callback as props
+    - Display user-friendly error message
+    - Add "Try Again" button
+    - Assign data-testid for testing
+    - _Requirements: TBD_
+  
+  - [ ] 20.3 Update ResultsPage with loading and error states
+    - Show LoadingSpinner while fetching flights
+    - Show ErrorMessage if API call fails
+    - Show "No flights found" message if results are empty
+    - Provide retry functionality
+    - _Requirements: TBD_
+
+- [ ] 21. Update TripSummaryPlaceholder with real data
+  - [ ] 21.1 Create src/components/layout/TripSummary.tsx
+    - Replace TripSummaryPlaceholder with real TripSummary component
+    - Display search criteria (origin, destination, dates, passengers, cabin class)
+    - Display selected flight details (if flight is selected)
+    - Display total price
+    - Make sticky on desktop (>= md breakpoint)
+    - Assign data-testid to all elements
+    - _Requirements: TBD_
+  
+  - [ ] 21.2 Implement trip summary state management
+    - Create context or state management for selected flight
+    - Update TripSummary when flight is selected
+    - Persist selected flight in session storage
+    - _Requirements: TBD_
+
+- [ ] 22. Checkpoint - Verify Phase 2 implementation
+  - [ ] 22.1 Verify API integration
+    - Start backend inventory service
+    - Perform flight search from home page
+    - Verify API call is made to inventory service
+    - Verify results are displayed correctly
+    - Check browser network tab for API requests
+    - _Requirements: TBD_
+  
+  - [ ] 22.2 Verify sorting and filtering
+    - Apply different sort options and verify results order
+    - Apply filters and verify results are filtered correctly
+    - Verify filter/sort state persists in URL
+    - _Requirements: TBD_
+  
+  - [ ] 22.3 Verify pagination
+    - Search for flights with many results
+    - Verify pagination controls appear
+    - Navigate between pages and verify results change
+    - Verify page state persists in URL
+    - _Requirements: TBD_
+  
+  - [ ] 22.4 Verify error handling
+    - Stop backend service and perform search
+    - Verify error message is displayed
+    - Click "Try Again" and verify retry works
+    - Verify loading spinner appears during fetch
+    - _Requirements: TBD_
+  
+  - [ ] 22.5 Verify trip summary
+    - Perform search and select a flight
+    - Verify trip summary displays search criteria
+    - Verify trip summary displays selected flight
+    - Verify trip summary is sticky on desktop
+    - _Requirements: TBD_
+
 ## Notes
 
 - All components use TypeScript with explicit type definitions
@@ -317,3 +474,15 @@ This implementation plan covers Phase 0 (project infrastructure and scaffolding)
 - Correlation ID uses crypto.randomUUID with fallback for test environments
 - All routes use AppShell layout wrapper for consistent navigation
 - Placeholder pages (/bookings, /help) prevent broken navigation links
+
+## Phase 2 Notes
+
+- Phase 2 replaces mock data with real API integration
+- Inventory service API endpoint: GET /api/inventory/search
+- API request format matches backend SearchFlightsRequest DTO
+- API response format matches backend SearchFlightsResponse DTO
+- React Query handles caching, loading states, and error handling
+- Sorting and filtering are client-side operations on API results
+- Pagination is client-side (10 flights per page)
+- Trip summary displays search criteria and selected flight
+- All Phase 2 components maintain Phase 1 test ID conventions

@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "API Test Discovery",
+  "description": "Discover API surface for all services (read-only). Produces structured inventory of controllers, endpoints, DTOs, and special headers.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "You are the API Test Discovery agent. Follow these documents strictly:\n1. prompts/TEST_GENERATION_BLUEPRINT.md\n2. prompts/00-agent-operating-rules.md\n3. prompts/01-discovery.md\n\nTASK: Perform read-only API discovery for all services in this repository.\n\nFor each service (booking-service, inventory-service, payment-service, baggage-service, loyalty-service):\n1. Identify service type (JSON REST, XML REST, or SOAP)\n2. List controllers and base paths\n3. List all endpoints (method + path + request DTO + response DTO)\n4. Identify special headers (X-Correlation-Id, Idempotency-Key)\n5. Identify ErrorResponse schema\n6. Identify local testkit endpoints (/test/*)\n\nContract discovery priority:\n1. OpenAPI snapshot (api-tests/src/test/resources/openapi-snapshots/)\n2. WSDL snapshot for SOAP (api-tests/src/test/resources/wsdl-snapshots/)\n3. Controller + DTO code (fallback)\n\nOUTPUT: Structured inventory per service. Do NOT generate code. Do NOT modify files."
+  }
+}

@@ -12,20 +12,25 @@ Event-driven microservices platform for airline seat reservations using saga pat
 - **Responsibility**: Booking lifecycle management and customer-facing API
 - **Owns**: Booking aggregate (bookingId, flightId, passengerId, seatClass, status, price)
 - **Exposes**: REST API for booking creation and status queries
-- **Publishes**: `booking.created.v1`
-- **Consumes**: `inventory.reserved.v1`, `inventory.rejected.v1`
+- **Publishes** (actual topics from BookingEventPublisher):
+  - `inventory.reserve.requested.v1` - When booking is created (starts saga)
+  - `inventory.release.requested.v1` - When inventory needs to be released
+  - `payment.requested.v1` - When payment is requested
+  - `booking.confirmed.v1` - When booking saga completes successfully
+  - `booking.rejected.v1` - When booking is rejected
+- **Consumes**: `inventory.reserved.v1`, `inventory.rejected.v1`, `payment.succeeded.v1`, `payment.failed.v1`
 
 ### Inventory Service (Port 8082)
 - **Responsibility**: Seat availability and reservation management
 - **Owns**: Inventory items and reservations (flightId, seatClass, available/reserved counts)
 - **Exposes**: Admin API for inventory management, query API for availability
-- **Publishes**: `inventory.reserved.v1`, `inventory.rejected.v1`
-- **Consumes**: `booking.created.v1`, `payment.succeeded.v1`, `payment.failed.v1`
+- **Publishes**: `inventory.reserved.v1`, `inventory.rejected.v1`, `inventory.released.v1`
+- **Consumes**: `inventory.reserve.requested.v1`, `inventory.release.requested.v1`
 
 ### Payment Service (Port 8083)
 - **Responsibility**: Payment processing simulation
 - **Publishes**: `payment.succeeded.v1`, `payment.failed.v1`
-- **Consumes**: `inventory.reserved.v1`
+- **Consumes**: `payment.requested.v1`
 
 ## Saga Orchestration Pattern
 
@@ -33,48 +38,66 @@ The booking workflow implements a choreography-based saga:
 
 ```
 CREATE BOOKING → RESERVE INVENTORY → PROCESS PAYMENT → CONFIRM/REJECT
-     ↓                  ↓                    ↓              ↓
-booking.created → inventory.reserved → payment.* → status update
-                       ↓
-                inventory.rejected → REJECTED
+     ↓                    ↓                  ↓              ↓
+inventory.reserve   inventory.reserved  payment.*    booking.confirmed
+  .requested.v1          .v1                           /rejected.v1
+                         ↓
+                  inventory.rejected.v1 → REJECTED
 ```
 
 ### Happy Path
-1. User POST `/api/bookings` → Booking created with PENDING status
-2. `booking.created.v1` published with correlationId
+1. User POST `/bookings` → Booking created with PENDING_PAYMENT status
+2. `inventory.reserve.requested.v1` published with correlationId (NOT booking.created.v1)
 3. Inventory service reserves seat → `inventory.reserved.v1`
-4. Payment service processes → `payment.succeeded.v1`
-5. Booking status → CONFIRMED
+4. Booking service requests payment → `payment.requested.v1`
+5. Payment service processes → `payment.succeeded.v1`
+6. Booking service publishes → `booking.confirmed.v1`
+7. Booking status → CONFIRMED
 
 ### Failure Scenarios
-- **Insufficient inventory**: `inventory.rejected.v1` → Booking status REJECTED
-- **Payment failure**: `payment.failed.v1` → Inventory releases reservation → Booking status REJECTED
+- **Insufficient inventory**: `inventory.rejected.v1` → `booking.rejected.v1` → Booking status REJECTED
+- **Payment failure**: `payment.failed.v1` → `inventory.release.requested.v1` → `booking.rejected.v1` → Booking status REJECTED
 
 ## Event Design Principles
 
-### Event Envelope Structure
-All events use `EventEnvelope<T>` wrapper:
-- `eventId`: UUID for deduplication
-- `eventType`: Domain event name (e.g., `booking.created.v1`)
-- `timestamp`: Event creation time
-- `correlationId`: Trace ID across service boundaries
-- `payload`: Event-specific data
+### Event Envelope Structure (Actual from EventEnvelope.java)
+All events use `EventEnvelope<T>` wrapper with nested structure:
+```json
+{
+  "meta": {
+    "eventId": "uuid",
+    "eventType": "inventory.reserve.requested",
+    "eventVersion": 1,
+    "occurredAt": "2026-02-03T19:00:00Z",
+    "correlationId": "uuid",
+    "producer": "booking-service"
+  },
+  "data": { ... event-specific payload ... }
+}
+```
+
+**IMPORTANT:** The structure uses:
+- `meta.eventId` (NOT `eventId` at root)
+- `meta.eventType` (NOT `eventType` at root)
+- `meta.correlationId` (NOT `correlationId` at root)
+- `meta.occurredAt` (NOT `timestamp`)
+- `data` (NOT `payload`)
 
 ### Event Naming Convention
-Format: `{domain}.{action}.{version}`
+Format: `{domain}.{action}` (eventType in meta) and `{domain}.{action}.{version}` (topic name)
 - Domain: Service boundary (booking, inventory, payment)
-- Action: Past tense verb (created, reserved, rejected, succeeded, failed)
-- Version: API version (v1, v2)
+- Action: Past tense or requested verb (reserved, rejected, requested, confirmed)
+- Version: API version in topic name (v1)
 
 ### Idempotency Requirements
-- All event handlers MUST check for duplicate `eventId` before processing
+- All event handlers MUST check for duplicate `meta.eventId` before processing
 - Use database constraints or caching to prevent duplicate processing
 - Handlers should be side-effect free when processing duplicates
 
 ## State Management Rules
 
 ### Booking Status Lifecycle
-- **PENDING**: Initial state, awaiting inventory reservation
+- **PENDING_PAYMENT**: Initial state after booking creation, awaiting saga completion
 - **CONFIRMED**: Terminal state, inventory reserved and payment succeeded
 - **REJECTED**: Terminal state, inventory unavailable or payment failed
 - **CANCELLED**: Terminal state (future feature)
@@ -82,7 +105,7 @@ Format: `{domain}.{action}.{version}`
 ### State Transition Rules
 - Terminal states (CONFIRMED, REJECTED, CANCELLED) are immutable
 - Attempting to update terminal state should be ignored (not error)
-- Only PENDING bookings can transition to CONFIRMED or REJECTED
+- Only PENDING_PAYMENT bookings can transition to CONFIRMED or REJECTED
 
 ## Data Consistency Patterns
 
@@ -92,7 +115,7 @@ Format: `{domain}.{action}.{version}`
 - Use correlationId for debugging inconsistencies
 
 ### Compensation Logic
-- Payment failure triggers inventory release via `payment.failed.v1`
+- Payment failure triggers inventory release via `inventory.release.requested.v1`
 - Inventory service handles compensation automatically
 - No manual rollback required
 
@@ -116,6 +139,7 @@ Format: `{domain}.{action}.{version}`
 ## Testing Considerations
 
 ### Event-Driven Testing
+- **ALWAYS read actual EventPublisher and EventEnvelope classes before writing tests**
 - Test event handlers independently with mock events
 - Verify idempotency by processing same event twice
 - Test compensation scenarios (payment failure, inventory rejection)
@@ -128,6 +152,6 @@ Format: `{domain}.{action}.{version}`
 ## Correlation and Tracing
 
 - Generate correlationId at API entry point (booking creation)
-- Propagate correlationId through all events in saga
+- Propagate correlationId through all events in saga (via meta.correlationId)
 - Log correlationId with all significant operations
 - Use correlationId to trace requests across service boundaries

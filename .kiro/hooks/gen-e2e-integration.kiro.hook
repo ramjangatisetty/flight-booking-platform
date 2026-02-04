@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Generate E2E Integration Tests",
+  "description": "Generates cross-service E2E integration tests for Loyalty+Booking and Baggage+Booking flows following prompts/12-generate-e2e-saga-tests.md",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Generate E2E cross-service integration tests following prompts/12-generate-e2e-saga-tests.md and prompts/TEST_GENERATION_BLUEPRINT.md. \n\nMANDATORY: First discover cross-service integration points by:\n1. Reading DTOs for foreign key references (memberId, bookingId, bagTag)\n2. Reading event listeners in services/*/messaging/consumer/\n3. Reading event publishers in services/*/messaging/producer/\n\nThen generate tests in api-tests/src/test/java/tests/e2e/ for:\n- LoyaltyBookingIntegrationTest (booking with memberId → loyalty points)\n- BaggageBookingIntegrationTest (booking confirmed → bagTag auto-creation)"
+  }
+}

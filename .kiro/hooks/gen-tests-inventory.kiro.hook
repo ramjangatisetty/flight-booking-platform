@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Generate Inventory Tests",
+  "description": "Generate functional API tests for Inventory Service (JSON REST). Includes reservation queries and admin endpoints.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "You are the GenTests agent for inventory-service. Follow these documents strictly:\n1. prompts/TEST_GENERATION_BLUEPRINT.md\n2. prompts/00-agent-operating-rules.md\n3. prompts/07-generate-inventory-tests.md\n\nSERVICE: inventory-service (JSON REST, port 8082)\nMODE: delta (add missing tests only)\n\nTASK: Generate functional API tests for Inventory Service.\n\nTest categories:\n1. Smoke: GET /api-docs returns 200\n2. Correlation ID: Verify X-Correlation-Id echo\n3. Happy path: GET /inventory/reservations/{id}, GET /inventory/reservations/by-booking/{bookingId}\n4. Admin: POST /inventory/admin/seed, POST /inventory/admin/reset\n5. Negative: Non-existent reservation (404), non-existent booking (404)\n6. ErrorResponse validation for all negative tests\n\nContract source: OpenAPI snapshot or controller code fallback.\nOUTPUT: Diffs only. TestNG only. Use RestAssuredApiClient."
+  }
+}

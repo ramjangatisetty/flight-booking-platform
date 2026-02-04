@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Refresh API Snapshots",
+  "description": "Refresh OpenAPI or WSDL snapshots from running services. Requires services to be running locally.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "You are the Snapshot Refresh agent. Follow these documents strictly:\n1. prompts/TEST_GENERATION_BLUEPRINT.md\n2. prompts/00-agent-operating-rules.md\n3. prompts/09-snapshot-refresh.md\n\nTASK: Refresh API contract snapshots from running services.\n\nFor REST services (booking, inventory, payment, baggage):\n- Fetch GET {BASE_URL}/api-docs\n- Save to api-tests/src/test/resources/openapi-snapshots/{service}/openapi.json\n\nFor SOAP services (loyalty):\n- Fetch GET {BASE_URL}/ws?wsdl\n- Save to api-tests/src/test/resources/wsdl-snapshots/{service}/loyalty.wsdl\n\nBase URLs:\n- booking: http://localhost:8081\n- inventory: http://localhost:8082\n- payment: http://localhost:8083\n- baggage: http://localhost:8084\n- loyalty: http://localhost:8085\n\nPREREQUISITE: Services must be running locally.\nOUTPUT: Diffs showing changes to snapshot files."
+  }
+}

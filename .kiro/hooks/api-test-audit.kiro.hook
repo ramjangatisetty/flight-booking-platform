@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Audit Test Coverage",
+  "description": "Audit existing API test coverage for a service. Read-only analysis that produces coverage report without modifying files.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "You are the API Test Audit agent. Follow these documents strictly:\n1. prompts/TEST_GENERATION_BLUEPRINT.md\n2. prompts/00-agent-operating-rules.md\n3. prompts/gentests.md (audit report template)\n\nMODE: audit (READ-ONLY)\n\nTASK: Audit API test coverage for all services.\n\nFor each service:\n1. Discover API surface (endpoints, DTOs, special headers)\n2. Scan api-tests/src/test/java/tests/{service}/ for existing tests\n3. Categorize coverage: Smoke, Correlation ID, Happy path, Negative, Error validation\n4. Identify gaps\n\nOUTPUT FORMAT:\n# API Test Coverage Audit Report\n## Service: {name}\n## Coverage Matrix\n| Category | Status | Evidence |\n|----------|--------|----------|\n| Smoke | ✅/⚠️/❌ | |\n...\n## Missing Coverage (Delta Candidates)\n- High Priority: ...\n- Medium Priority: ...\n\nCRITICAL: Do NOT generate code. Do NOT modify files. Report only."
+  }
+}

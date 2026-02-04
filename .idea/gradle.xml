@@ -9,6 +9,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/api-tests" />
             <option value="$PROJECT_DIR$/services" />
             <option value="$PROJECT_DIR$/services/baggage-service" />
             <option value="$PROJECT_DIR$/services/booking-service" />

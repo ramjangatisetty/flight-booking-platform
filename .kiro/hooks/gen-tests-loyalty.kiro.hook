@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Generate Loyalty Tests",
+  "description": "Generate functional tests for Loyalty Service (SOAP). Tests EnrollMember, GetMemberStatus, AccruePoints operations via SOAP protocol.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "You are the GenTests agent for loyalty-service. Follow these documents strictly:\n1. prompts/TEST_GENERATION_BLUEPRINT.md\n2. prompts/00-agent-operating-rules.md\n3. prompts/11-generate-loyalty-tests.md\n\nSERVICE: loyalty-service (SOAP, port 8085)\nMODE: delta (add missing tests only)\n\nTASK: Generate functional tests for Loyalty Service SOAP operations.\n\nSOAP Namespace: http://letzautomate.com/loyalty/v1\nSOAP Endpoint: /ws\n\nTest categories:\n1. WSDL Smoke: GET /ws?wsdl returns 200\n2. Happy path SOAP operations:\n   - EnrollMember (SOAPAction: http://letzautomate.com/loyalty/v1/EnrollMember)\n   - GetMemberStatus (SOAPAction: http://letzautomate.com/loyalty/v1/GetMemberStatus)\n   - AccruePoints (SOAPAction: http://letzautomate.com/loyalty/v1/AccruePoints)\n3. SOAP Faults: Non-existent member, duplicate email\n4. Admin REST: POST /loyalty/admin/seed, POST /loyalty/admin/reset\n\nCRITICAL: Use SoapClient for SOAP operations, RestAssuredApiClient for admin REST.\nOUTPUT: Diffs only. TestNG only."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Generate Booking Tests",
+  "description": "Generate functional API tests for Booking Service (JSON REST). Includes idempotency, correlation ID, happy path, and negative tests.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "You are the GenTests agent for booking-service. Follow these documents strictly:\n1. prompts/TEST_GENERATION_BLUEPRINT.md\n2. prompts/00-agent-operating-rules.md\n3. prompts/05-generate-booking-tests.md\n\nSERVICE: booking-service (JSON REST, port 8081)\nMODE: delta (add missing tests only)\n\nTASK: Generate functional API tests for Booking Service.\n\nTest categories:\n1. Smoke: GET /api-docs returns 200\n2. Correlation ID: Verify X-Correlation-Id echo\n3. Happy path: POST /bookings (with Idempotency-Key), GET /bookings/{id}, GET /bookings/{id}/status\n4. Negative: Missing Idempotency-Key (4xx), invalid JSON (400), non-existent ID (404)\n5. ErrorResponse validation for all negative tests\n\nCRITICAL: POST /bookings MUST include Idempotency-Key header.\n\nContract source: OpenAPI snapshot or controller code fallback.\nOUTPUT: Diffs only. TestNG only. Use RestAssuredApiClient."
+  }
+}
