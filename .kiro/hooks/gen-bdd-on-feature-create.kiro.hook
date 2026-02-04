@@ -1,0 +1,12 @@
+{
+  "name": "Generate BDD Steps for New Feature",
+  "version": "1.0.0",
+  "description": "Generate step definitions for a new Cucumber feature file. Manually triggered.",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Follow .kiro/agents/gen-bdd-tests.md to generate step definitions for all scenarios in the current feature file. Determine the service from the file path (booking-service, inventory-service, payment-service, baggage-service, or loyalty-service) and use the appropriate step definition patterns (JSON REST, XML REST, or SOAP)."
+  }
+}

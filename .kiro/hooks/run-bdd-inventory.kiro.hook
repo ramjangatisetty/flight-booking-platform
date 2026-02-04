@@ -1,0 +1,12 @@
+{
+  "name": "Run BDD Tests - Inventory",
+  "version": "1.0.0",
+  "description": "Manually generate BDD tests for Inventory Service (JSON REST).",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Follow .kiro/agents/gen-bdd-tests.md with SERVICE=inventory-service MODE=delta to generate or update Cucumber feature files and step definitions for Inventory Service."
+  }
+}

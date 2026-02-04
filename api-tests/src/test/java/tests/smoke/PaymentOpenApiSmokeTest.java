@@ -13,11 +13,7 @@ import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Smoke test for Payment Service OpenAPI docs endpoint.
- */
 public class PaymentOpenApiSmokeTest {
-
     private ApiClient client;
 
     @BeforeClass(alwaysRun = true)

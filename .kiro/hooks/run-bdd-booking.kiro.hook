@@ -1,0 +1,12 @@
+{
+  "name": "Run BDD Tests - Booking",
+  "version": "1.0.0",
+  "description": "Manually generate BDD tests for Booking Service (JSON REST).",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Follow .kiro/agents/gen-bdd-tests.md with SERVICE=booking-service MODE=delta to generate or update Cucumber feature files and step definitions for Booking Service."
+  }
+}

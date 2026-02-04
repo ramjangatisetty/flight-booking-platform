@@ -37,14 +37,16 @@ inclusion: always
 ## Service Configuration
 
 ### Port Assignments (MUST follow)
-- Booking Service: **8081**
-- Inventory Service: **8082**
-- Payment Service: **8083**
+- Booking Service: **8081** (JSON REST, OpenAPI enabled)
+- Inventory Service: **8082** (JSON REST, OpenAPI enabled)
+- Payment Service: **8083** (JSON REST, OpenAPI enabled, stateless - no REST endpoints)
+- Loyalty Service: **8084** (SOAP, WSDL at `/ws/loyalty.wsdl`)
+- Baggage Service: **8085** (XML REST, OpenAPI NOT configured)
 - PostgreSQL (Booking): **5433**
 - PostgreSQL (Inventory): **5434**
 - PostgreSQL (Payment): **5435**
 - Kafka: **9092** (external), **29092** (internal)
-- Kafka UI: **8085**
+- Kafka UI: **8086**
 
 ### Spring Profiles
 - `local`: Development with Docker infrastructure (default)
@@ -123,13 +125,23 @@ Verify Kafka is ready before starting services (check Kafka UI at http://localho
 - Ensure Lombok plugin is installed in IDE
 
 ### OpenAPI Documentation
-- Auto-generated from code annotations
+- Auto-generated from code annotations (requires `springdoc-openapi-starter-webmvc-ui` dependency)
 - Access Swagger UI:
   - Booking: http://localhost:8081/swagger-ui.html
   - Inventory: http://localhost:8082/swagger-ui.html
-  - Payment: http://localhost:8083/swagger-ui.html
+  - Payment: http://localhost:8083/swagger-ui.html (empty - stateless service)
+- OpenAPI JSON endpoint: `/v3/api-docs`
 - Use `@Operation`, `@ApiResponse` for better docs
 - DTOs automatically generate schemas
+
+### WSDL Documentation (SOAP Services)
+- Loyalty Service WSDL: http://localhost:8084/ws/loyalty.wsdl
+- XSD schema: `services/loyalty-service/src/main/resources/xsd/loyalty.xsd`
+
+### Services WITHOUT OpenAPI
+- **Baggage Service** (port 8085): XML REST service without springdoc dependency
+  - Contract defined by XSD: `services/baggage-service/src/main/resources/xsd/baggage.xsd`
+  - To enable OpenAPI, add `springdoc-openapi-starter-webmvc-ui` to build.gradle
 
 ## Testing Framework
 

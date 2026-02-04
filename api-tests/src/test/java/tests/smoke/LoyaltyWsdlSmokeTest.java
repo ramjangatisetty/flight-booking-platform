@@ -13,11 +13,7 @@ import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Smoke test for Loyalty Service WSDL endpoint.
- */
 public class LoyaltyWsdlSmokeTest {
-
     private ApiClient client;
 
     @BeforeClass(alwaysRun = true)
@@ -40,20 +36,13 @@ public class LoyaltyWsdlSmokeTest {
         assertThat(actualStatus)
                 .as("GET /ws/loyalty.wsdl should return 200")
                 .isEqualTo(expectedStatus);
-    }
-
-    @Test(groups = "smoke")
-    public void wsdlShouldContainDefinitions() {
-        ReportLogger.logStep("Verifying WSDL contains definitions element");
-        var response = client.get(LoyaltyEndpoints.WSDL, Collections.emptyMap());
 
         String body = response.getBody().asString();
         boolean containsDefinitions = body.contains("wsdl:definitions") || body.contains("definitions");
+        ReportLogger.logAssertion("Response contains WSDL definitions", true, containsDefinitions, containsDefinitions);
 
-        ReportLogger.logAssertion("WSDL should contain definitions", true, containsDefinitions, containsDefinitions);
-
-        assertThat(containsDefinitions)
-                .as("WSDL should contain 'definitions' element")
-                .isTrue();
+        assertThat(body)
+                .as("WSDL should contain definitions")
+                .containsAnyOf("wsdl:definitions", "definitions");
     }
 }

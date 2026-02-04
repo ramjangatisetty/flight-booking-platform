@@ -18,7 +18,8 @@ When invoking this agent, specify:
 You MUST follow these documents strictly:
 1. `prompts/TEST_GENERATION_BLUEPRINT.md` - Supreme authority
 2. `prompts/00-agent-operating-rules.md` - Operational constraints
-3. `prompts/gentests.md` - Test generation rules
+3. `prompts/00-security-guardrails.md` - Security policies
+4. `prompts/gentests.md` - Test generation rules
 
 ## Service-Specific Prompts
 - Booking (JSON REST): `prompts/05-generate-booking-tests.md`

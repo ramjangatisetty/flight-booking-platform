@@ -1,24 +1,12 @@
 package framework.xml;
 
-/**
- * Abstract base class for building XML request payloads.
- */
-public abstract class XmlRequestBuilder<T extends XmlRequestBuilder<T>> {
+public abstract class XmlRequestBuilder {
+    protected String namespace = "http://letzautomate.com/baggage/v1";
 
-    protected String namespace;
-
-    @SuppressWarnings("unchecked")
-    public T withNamespace(String namespace) {
+    public XmlRequestBuilder withNamespace(String namespace) {
         this.namespace = namespace;
-        return (T) this;
+        return this;
     }
 
     public abstract String build();
-
-    protected String getNamespaceAttribute() {
-        if (namespace != null && !namespace.isBlank()) {
-            return " xmlns=\"" + namespace + "\"";
-        }
-        return "";
-    }
 }

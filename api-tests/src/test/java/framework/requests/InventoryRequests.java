@@ -3,14 +3,8 @@ package framework.requests;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Factory for creating Inventory Service request payloads.
- */
 public final class InventoryRequests {
-
-    private InventoryRequests() {
-        // Utility class
-    }
+    private InventoryRequests() {}
 
     public static Map<String, Object> seedInventory(String flightId, String seatClass, int availableSeats) {
         Map<String, Object> request = new HashMap<>();

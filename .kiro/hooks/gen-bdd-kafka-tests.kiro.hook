@@ -1,0 +1,12 @@
+{
+  "name": "Generate BDD Kafka Event Tests",
+  "version": "1.0.0",
+  "description": "Generate Cucumber feature files and step definitions for Kafka event verification testing. Validates events are published correctly after API operations.",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Follow .kiro/agents/gen-bdd-kafka-tests.md to generate BDD Kafka event tests. Ask the user which service to generate tests for: booking-service, inventory-service, or payment-service. Then generate the appropriate feature files and step definitions."
+  }
+}

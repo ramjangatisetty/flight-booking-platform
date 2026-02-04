@@ -1,0 +1,12 @@
+{
+  "name": "Run BDD Kafka Event Tests",
+  "version": "1.0.0",
+  "description": "Runs Cucumber BDD tests for Kafka event verification. Tests validate that events are correctly published after API operations.",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Run the Kafka BDD tests using: ./gradlew :api-tests:cucumberTest -Dcucumber.filter.tags=\"@kafka\" --info"
+  }
+}

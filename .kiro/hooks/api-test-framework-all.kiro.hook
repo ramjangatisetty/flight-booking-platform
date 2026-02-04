@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Generate Test Framework (Full)",
+  "description": "Create complete API test framework with both TestNG and BDD/Cucumber support. Use this when you want both testing approaches.",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Follow .kiro/agents/api-test-framework.md with TYPE=all\n\nThis generates the COMPLETE framework with both TestNG and BDD/Cucumber infrastructure.\n\nIf api-tests module does NOT exist:\n1. Create api-tests/build.gradle with ALL dependencies (RestAssured, TestNG, Cucumber, AssertJ, Jackson)\n2. Update settings.gradle to include api-tests\n3. Create ALL framework packages including bdd/\n4. Create smoke tests\n5. Create ALL resource directories including features/\n6. Create ALL configuration files\n\nIf api-tests module exists:\n- Add missing components only\n- Do NOT recreate existing files\n\nSCOPE: Complete framework/** including bdd/.\nOUTPUT: Diffs only."
+  }
+}

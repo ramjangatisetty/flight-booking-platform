@@ -1,0 +1,12 @@
+{
+  "name": "Generate BDD/Cucumber Tests",
+  "version": "1.0.0",
+  "description": "Generate Cucumber feature files and step definitions for a service. Provides business-readable BDD tests as an alternative to TestNG tests.",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Follow .kiro/agents/gen-bdd-tests.md to generate BDD/Cucumber tests. Ask the user which service they want to generate tests for (booking-service, inventory-service, payment-service, baggage-service, or loyalty-service) and what mode (audit, delta, or full)."
+  }
+}

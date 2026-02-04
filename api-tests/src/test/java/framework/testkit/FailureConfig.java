@@ -3,42 +3,36 @@ package framework.testkit;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Configuration for fault injection in local testkit.
- */
 public class FailureConfig {
+    private final Map<String, Object> config = new HashMap<>();
 
-    private final Map<String, Object> config;
-
-    private FailureConfig(Map<String, Object> config) {
-        this.config = config;
-    }
+    private FailureConfig() {}
 
     public static FailureConfig timeout(int ms) {
-        Map<String, Object> config = new HashMap<>();
-        config.put("type", "timeout");
-        config.put("timeoutMs", ms);
-        return new FailureConfig(config);
+        FailureConfig fc = new FailureConfig();
+        fc.config.put("type", "timeout");
+        fc.config.put("timeoutMs", ms);
+        return fc;
     }
 
     public static FailureConfig error(int statusCode) {
-        Map<String, Object> config = new HashMap<>();
-        config.put("type", "error");
-        config.put("statusCode", statusCode);
-        return new FailureConfig(config);
+        FailureConfig fc = new FailureConfig();
+        fc.config.put("type", "error");
+        fc.config.put("statusCode", statusCode);
+        return fc;
     }
 
     public static FailureConfig latency(int ms) {
-        Map<String, Object> config = new HashMap<>();
-        config.put("type", "latency");
-        config.put("latencyMs", ms);
-        return new FailureConfig(config);
+        FailureConfig fc = new FailureConfig();
+        fc.config.put("type", "latency");
+        fc.config.put("latencyMs", ms);
+        return fc;
     }
 
     public static FailureConfig disabled() {
-        Map<String, Object> config = new HashMap<>();
-        config.put("type", "disabled");
-        return new FailureConfig(config);
+        FailureConfig fc = new FailureConfig();
+        fc.config.put("type", "disabled");
+        return fc;
     }
 
     public Map<String, Object> toMap() {

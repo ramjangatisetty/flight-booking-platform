@@ -13,23 +13,63 @@ java {
 }
 
 dependencies {
+    // REST API Testing
     testImplementation 'io.rest-assured:rest-assured:5.5.0'
+    
+    // TestNG for smoke tests
     testImplementation 'org.testng:testng:7.10.2'
+    
+    // JUnit 5 Platform for Cucumber
+    testImplementation platform('org.junit:junit-bom:5.10.3')
+    testImplementation 'org.junit.platform:junit-platform-suite'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    
+    // Cucumber with JUnit Platform
     testImplementation 'io.cucumber:cucumber-java:7.18.1'
-    testImplementation 'io.cucumber:cucumber-testng:7.18.1'
+    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.18.1'
+    testImplementation 'io.cucumber:cucumber-picocontainer:7.18.1'
+    
+    // Assertions
     testImplementation 'org.assertj:assertj-core:3.26.3'
+    
+    // JSON/XML Processing
     testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
     testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2'
     testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.17.2'
+    
+    // Reporting
     testImplementation 'com.aventstack:extentreports:5.1.2'
+    testImplementation 'tech.grasshopper:extentreports-cucumber7-adapter:1.14.0'
+    
+    // Logging
     testImplementation 'org.slf4j:slf4j-simple:2.0.16'
     
-    // Kafka client for event verification tests
+    // Kafka Client for event testing
     testImplementation 'org.apache.kafka:kafka-clients:3.7.0'
 }
 
-tasks.test {
+// Smoke tests use TestNG
+tasks.register('smokeTest', Test) {
+    description = 'Runs smoke tests with TestNG'
+    group = 'verification'
     useTestNG {
         suites 'src/test/resources/testng.xml'
     }
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+}
+
+// Cucumber BDD tests use JUnit Platform
+tasks.register('cucumberTest', Test) {
+    description = 'Runs Cucumber BDD tests with JUnit Platform'
+    group = 'verification'
+    useJUnitPlatform()
+    include '**/CucumberTest.class'
+    systemProperty 'cucumber.junit-platform.naming-strategy', 'long'
+}
+
+// Default test task - use smokeTest or cucumberTest directly
+tasks.named('test') {
+    // Disable default test task - use smokeTest or cucumberTest instead
+    onlyIf { false }
 }

@@ -1,28 +1,21 @@
 package framework.bdd;
 
-import framework.clients.ApiClient;
-import framework.clients.RestAssuredApiClient;
 import framework.config.ServiceType;
-import framework.config.TestConfig;
 import framework.headers.CorrelationIdSupport;
 import framework.headers.IdempotencyKeySupport;
-import framework.soap.SoapClientImpl;
-import framework.xml.XmlApiClient;
+import framework.reporting.ReportLogger;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Common step definitions implementing canonical step vocabulary.
- */
 public class CommonStepDefinitions {
-
     private final TestContext context;
 
     public CommonStepDefinitions(TestContext context) {
@@ -36,60 +29,90 @@ public class CommonStepDefinitions {
 
     @Given("I am testing the {string} service")
     public void iAmTestingTheService(String serviceName) {
-        ServiceType serviceType = ServiceType.valueOf(serviceName.toUpperCase());
-        String baseUrl = TestConfig.getInstance().getBaseUrl(serviceType);
-
-        if (serviceType == ServiceType.BAGGAGE) {
-            context.setClient(new XmlApiClient(baseUrl));
-        } else if (serviceType == ServiceType.LOYALTY) {
-            context.setClient(new RestAssuredApiClient(baseUrl));
-            context.setSoapClient(new SoapClientImpl(baseUrl));
-        } else {
-            context.setClient(new RestAssuredApiClient(baseUrl));
+        ServiceType serviceType = switch (serviceName.toLowerCase()) {
+            case "booking" -> ServiceType.BOOKING;
+            case "inventory" -> ServiceType.INVENTORY;
+            case "payment" -> ServiceType.PAYMENT;
+            case "baggage" -> ServiceType.BAGGAGE;
+            case "loyalty" -> ServiceType.LOYALTY;
+            default -> throw new IllegalArgumentException("Unknown service: " + serviceName);
+        };
+        context.setClient(serviceType);
+        if (serviceType == ServiceType.LOYALTY) {
+            context.setSoapClient(serviceType);
         }
+        ReportLogger.logStep("Testing " + serviceName + " service");
     }
 
     @Given("I set header {string} to {string}")
-    public void iSetHeaderTo(String name, String value) {
-        context.setHeader(name, value);
+    public void iSetHeaderTo(String headerName, String headerValue) {
+        String resolvedValue = resolveVariable(headerValue);
+        context.setHeader(headerName, resolvedValue);
+        ReportLogger.info("Set header " + headerName + " = " + resolvedValue);
     }
 
     @Given("I ensure a correlation id header is present")
     public void iEnsureACorrelationIdHeaderIsPresent() {
-        if (!context.getHeaders().containsKey(CorrelationIdSupport.HEADER_NAME)) {
-            context.setHeader(CorrelationIdSupport.HEADER_NAME, CorrelationIdSupport.generate());
-        }
+        String correlationId = CorrelationIdSupport.generate();
+        context.setHeader(CorrelationIdSupport.HEADER_NAME, correlationId);
+        context.set("correlationId", correlationId);
+        ReportLogger.info("Generated correlation ID: " + correlationId);
     }
 
     @Given("I set an idempotency key header")
     public void iSetAnIdempotencyKeyHeader() {
-        context.setHeader(IdempotencyKeySupport.HEADER_NAME, IdempotencyKeySupport.generate());
+        String idempotencyKey = IdempotencyKeySupport.generate();
+        context.setHeader(IdempotencyKeySupport.HEADER_NAME, idempotencyKey);
+        context.set("idempotencyKey", idempotencyKey);
+        ReportLogger.info("Generated idempotency key: " + idempotencyKey);
     }
 
     @When("I call {string} {string}")
     public void iCall(String method, String path) {
-        ApiClient client = context.getClient();
-        Response response;
+        String resolvedPath = resolvePathVariables(path);
+        Map<String, String> headers = context.getHeaders();
+        Response response = switch (method.toUpperCase()) {
+            case "GET" -> context.getClient().get(resolvedPath, headers);
+            case "DELETE" -> context.getClient().delete(resolvedPath, headers);
+            default -> throw new IllegalArgumentException("Use 'I call METHOD PATH with JSON body' for " + method);
+        };
+        context.setLastResponse(response);
+    }
 
-        // Replace path variables with stored values
-        path = replacePlaceholders(path);
+    @When("I call {string} {string} with JSON body")
+    public void iCallWithJsonBody(String method, String path) {
+        String resolvedPath = resolvePathVariables(path);
+        Map<String, String> headers = context.getHeaders();
+        Object body = context.getLastRequestBody();
+        Response response = switch (method.toUpperCase()) {
+            case "POST" -> context.getClient().post(resolvedPath, headers, body);
+            case "PUT" -> context.getClient().put(resolvedPath, headers, body);
+            case "PATCH" -> context.getClient().patch(resolvedPath, headers, body);
+            default -> throw new IllegalArgumentException("Unsupported method: " + method);
+        };
+        context.setLastResponse(response);
+    }
 
-        switch (method.toUpperCase()) {
-            case "GET" -> response = client.get(path, context.getHeaders());
-            case "POST" -> response = client.post(path, context.getHeaders(), context.getLastRequestBody());
-            case "PUT" -> response = client.put(path, context.getHeaders(), context.getLastRequestBody());
-            case "PATCH" -> response = client.patch(path, context.getHeaders(), context.getLastRequestBody());
-            case "DELETE" -> response = client.delete(path, context.getHeaders());
-            default -> throw new IllegalArgumentException("Unsupported HTTP method: " + method);
-        }
-
+    @When("I call {string} {string} with empty body")
+    public void iCallWithEmptyBody(String method, String path) {
+        String resolvedPath = resolvePathVariables(path);
+        Map<String, String> headers = context.getHeaders();
+        Response response = switch (method.toUpperCase()) {
+            case "POST" -> context.getClient().post(resolvedPath, headers, "");
+            case "PUT" -> context.getClient().put(resolvedPath, headers, "");
+            case "PATCH" -> context.getClient().patch(resolvedPath, headers, "");
+            default -> throw new IllegalArgumentException("Unsupported method: " + method);
+        };
         context.setLastResponse(response);
     }
 
     @Then("the response status should be {int}")
     public void theResponseStatusShouldBe(int expectedStatus) {
         Response response = context.getLastResponse();
-        assertThat(response.getStatusCode())
+        int actualStatus = response.getStatusCode();
+        boolean passed = actualStatus == expectedStatus;
+        ReportLogger.logAssertion("Response status code", expectedStatus, actualStatus, passed);
+        assertThat(actualStatus)
                 .as("Response status code")
                 .isEqualTo(expectedStatus);
     }
@@ -97,39 +120,56 @@ public class CommonStepDefinitions {
     @And("I capture {string} as {string}")
     public void iCaptureAs(String jsonPath, String variableName) {
         Response response = context.getLastResponse();
-        JsonPath jp = response.jsonPath();
-        Object value = jp.get(jsonPath);
+        Object value = response.jsonPath().get(jsonPath);
         context.set(variableName, value);
+        ReportLogger.info("Captured " + variableName + " = " + value);
     }
 
     @And("the response json {string} should equal {string}")
     public void theResponseJsonShouldEqual(String jsonPath, String expectedValue) {
         Response response = context.getLastResponse();
-        JsonPath jp = response.jsonPath();
-
-        // Replace placeholders in expected value
-        expectedValue = replacePlaceholders(expectedValue);
-
-        String actualValue = jp.getString(jsonPath);
+        String actualValue = response.jsonPath().getString(jsonPath);
+        String resolvedExpected = resolveVariable(expectedValue);
+        boolean passed = resolvedExpected.equals(actualValue);
+        ReportLogger.logAssertion("JSON path " + jsonPath, resolvedExpected, actualValue, passed);
         assertThat(actualValue)
-                .as("JSON path " + jsonPath)
-                .isEqualTo(expectedValue);
+                .as("JSON path %s", jsonPath)
+                .isEqualTo(resolvedExpected);
     }
 
-    private String replacePlaceholders(String text) {
-        if (text == null) {
-            return null;
+    @And("the response should contain {string}")
+    public void theResponseShouldContain(String expectedText) {
+        String body = context.getLastResponse().getBody().asString();
+        boolean passed = body.contains(expectedText);
+        ReportLogger.logAssertion("Response contains text", expectedText, passed ? "found" : "not found", passed);
+        assertThat(body)
+                .as("Response body should contain")
+                .contains(expectedText);
+    }
+
+    private String resolveVariable(String value) {
+        if (value.startsWith("{") && value.endsWith("}")) {
+            String varName = value.substring(1, value.length() - 1);
+            String resolved = context.getString(varName);
+            return resolved != null ? resolved : value;
         }
-        // Replace {variableName} with stored values
-        for (String key : text.split("\\{")) {
-            if (key.contains("}")) {
-                String varName = key.substring(0, key.indexOf("}"));
-                Object value = context.get(varName);
-                if (value != null) {
-                    text = text.replace("{" + varName + "}", value.toString());
-                }
+        return value;
+    }
+
+    private String resolvePathVariables(String path) {
+        String resolved = path;
+        while (resolved.contains("{")) {
+            int start = resolved.indexOf("{");
+            int end = resolved.indexOf("}", start);
+            if (end == -1) break;
+            String varName = resolved.substring(start + 1, end);
+            String varValue = context.getString(varName);
+            if (varValue != null) {
+                resolved = resolved.substring(0, start) + varValue + resolved.substring(end + 1);
+            } else {
+                break;
             }
         }
-        return text;
+        return resolved;
     }
 }

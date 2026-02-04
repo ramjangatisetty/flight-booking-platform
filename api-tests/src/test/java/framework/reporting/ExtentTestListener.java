@@ -8,43 +8,33 @@ import org.testng.ITestResult;
 
 import java.util.Arrays;
 
-/**
- * TestNG listener for ExtentReports integration.
- */
 public class ExtentTestListener implements ITestListener {
 
     @Override
     public void onStart(ITestContext context) {
-        // Initialize report on suite start
         ExtentReportManager.getInstance();
     }
 
     @Override
     public void onFinish(ITestContext context) {
-        // Flush report on suite finish
         ExtentReportManager.flush();
     }
 
     @Override
     public void onTestStart(ITestResult result) {
         String testName = result.getMethod().getMethodName();
-        String className = result.getTestClass().getName();
         String[] groups = result.getMethod().getGroups();
-
-        ExtentTest test = ExtentReportManager.createTest(className + "." + testName);
-
-        if (groups.length > 0) {
-            test.assignCategory(groups);
-        }
-
-        test.info("Test started: " + testName);
+        String description = groups.length > 0
+                ? "Groups: " + Arrays.toString(groups)
+                : null;
+        ExtentReportManager.createTest(testName, description);
     }
 
     @Override
     public void onTestSuccess(ITestResult result) {
         ExtentTest test = ExtentReportManager.getTest();
         if (test != null) {
-            test.log(Status.PASS, "Test passed: " + result.getMethod().getMethodName());
+            test.log(Status.PASS, "Test passed");
         }
         ExtentReportManager.removeTest();
     }
@@ -53,13 +43,8 @@ public class ExtentTestListener implements ITestListener {
     public void onTestFailure(ITestResult result) {
         ExtentTest test = ExtentReportManager.getTest();
         if (test != null) {
-            Throwable throwable = result.getThrowable();
-            if (throwable != null) {
-                test.log(Status.FAIL, "Test failed: " + throwable.getMessage());
-                test.log(Status.FAIL, Arrays.toString(throwable.getStackTrace()));
-            } else {
-                test.log(Status.FAIL, "Test failed: " + result.getMethod().getMethodName());
-            }
+            test.log(Status.FAIL, "Test failed: " + result.getThrowable().getMessage());
+            test.fail(result.getThrowable());
         }
         ExtentReportManager.removeTest();
     }
@@ -68,9 +53,9 @@ public class ExtentTestListener implements ITestListener {
     public void onTestSkipped(ITestResult result) {
         ExtentTest test = ExtentReportManager.getTest();
         if (test != null) {
-            test.log(Status.SKIP, "Test skipped: " + result.getMethod().getMethodName());
+            test.log(Status.SKIP, "Test skipped");
             if (result.getThrowable() != null) {
-                test.log(Status.SKIP, "Reason: " + result.getThrowable().getMessage());
+                test.skip(result.getThrowable());
             }
         }
         ExtentReportManager.removeTest();

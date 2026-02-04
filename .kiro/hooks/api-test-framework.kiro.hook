@@ -1,13 +1,13 @@
 {
   "enabled": true,
-  "name": "Generate Test Framework",
-  "description": "Create or update the shared API test framework skeleton. Generates framework classes for JSON REST, XML REST, and SOAP testing.",
-  "version": "1",
+  "name": "Generate Test Framework (TestNG)",
+  "description": "Create or update the shared API test framework skeleton with TestNG only. Use this for traditional programmatic tests without BDD/Cucumber.",
+  "version": "2",
   "when": {
     "type": "userTriggered"
   },
   "then": {
     "type": "askAgent",
-    "prompt": "You are the GenFramework agent. Follow these documents strictly:\n1. prompts/TEST_GENERATION_BLUEPRINT.md\n2. prompts/00-agent-operating-rules.md\n3. prompts/03-generate-framework-skeleton.md\n\nTASK: Create or update the API test framework.\n\nIf api-tests module does NOT exist:\n1. Create api-tests/build.gradle.kts with RestAssured, TestNG, AssertJ, Jackson\n2. Update settings.gradle to include api-tests\n3. Create framework packages: config, clients, xml, soap, endpoints, requests, models, mappers, asserters, headers, utils, testkit\n4. Create smoke tests\n5. Create snapshot directories\n\nIf api-tests module exists:\n- Modify ONLY required framework classes\n- Do NOT recreate existing files\n\nSCOPE: framework/** only. Do NOT generate service-specific tests.\nOUTPUT: Diffs only."
+    "prompt": "Follow .kiro/agents/api-test-framework.md with TYPE=testng\n\nThis generates the core TestNG framework WITHOUT BDD/Cucumber infrastructure.\n\nIf api-tests module does NOT exist:\n1. Create api-tests/build.gradle with RestAssured, TestNG, AssertJ, Jackson (NO Cucumber)\n2. Update settings.gradle to include api-tests\n3. Create framework packages: config, clients, xml, soap, endpoints, requests, models, mappers, asserters, headers, utils, testkit, reporting\n4. Create smoke tests\n5. Create snapshot directories (NO features/ directories)\n\nIf api-tests module exists:\n- Modify ONLY required framework classes\n- Do NOT recreate existing files\n\nSCOPE: framework/** only (excluding bdd/). Do NOT generate service-specific tests.\nOUTPUT: Diffs only."
   }
 }

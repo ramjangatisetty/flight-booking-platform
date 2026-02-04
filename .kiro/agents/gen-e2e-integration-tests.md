@@ -7,9 +7,10 @@
 
 ## Governing Documents
 Follow these documents strictly:
-1. `prompts/TEST_GENERATION_BLUEPRINT.md`
-2. `prompts/00-agent-operating-rules.md`
-3. `prompts/12-generate-e2e-saga-tests.md`
+1. `prompts/TEST_GENERATION_BLUEPRINT.md` - Supreme authority
+2. `prompts/00-agent-operating-rules.md` - Operational constraints
+3. `prompts/00-security-guardrails.md` - Security policies
+4. `prompts/12-generate-e2e-saga-tests.md` - E2E saga test generation
 
 ## Task
 

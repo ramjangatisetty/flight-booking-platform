@@ -1,0 +1,15 @@
+{
+  "name": "Generate BDD Tests - Baggage",
+  "version": "1.0.0",
+  "description": "Generate or update Cucumber feature files and step definitions for Baggage Service (XML REST) when feature files change.",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A baggage-service feature file was edited. Follow .kiro/agents/gen-bdd-tests.md with SERVICE=baggage-service MODE=delta to ensure step definitions exist for all scenarios in the edited feature file. Baggage service uses XML REST - ensure XmlStepDefinitions are used. Only add missing step definitions - do not modify existing ones."
+  },
+  "enabled": true,
+  "workspaceFolderName": "flight-booking-platform",
+  "shortName": "gen-bdd-baggage"
+}

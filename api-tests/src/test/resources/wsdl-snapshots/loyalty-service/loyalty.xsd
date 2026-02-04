@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:tns="http://letzautomate.com/loyalty/v1"
+           targetNamespace="http://letzautomate.com/loyalty/v1"
+           elementFormDefault="qualified">
+
+    <!-- Enroll Member Request/Response -->
+    <xs:element name="EnrollMemberRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="firstName" type="xs:string"/>
+                <xs:element name="lastName" type="xs:string"/>
+                <xs:element name="email" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="EnrollMemberResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="memberId" type="xs:string"/>
+                <xs:element name="tier" type="tns:TierType"/>
+                <xs:element name="status" type="tns:StatusType"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Get Member Status Request/Response -->
+    <xs:element name="GetMemberStatusRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="memberId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="GetMemberStatusResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="memberId" type="xs:string"/>
+                <xs:element name="tier" type="tns:TierType"/>
+                <xs:element name="status" type="tns:StatusType"/>
+                <xs:element name="pointsBalance" type="xs:int"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Accrue Points Request/Response -->
+    <xs:element name="AccruePointsRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="memberId" type="xs:string"/>
+                <xs:element name="bookingId" type="xs:string"/>
+                <xs:element name="amount" type="xs:decimal"/>
+                <xs:element name="currency" type="xs:string"/>
+                <xs:element name="correlationId" type="xs:string" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="AccruePointsResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="memberId" type="xs:string"/>
+                <xs:element name="bookingId" type="xs:string"/>
+                <xs:element name="pointsCredited" type="xs:int"/>
+                <xs:element name="newPointsBalance" type="xs:int"/>
+                <xs:element name="tier" type="tns:TierType"/>
+                <xs:element name="status" type="tns:StatusType"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Fault -->
+    <xs:element name="LoyaltyFault">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="faultCode" type="xs:string"/>
+                <xs:element name="faultMessage" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Enums -->
+    <xs:simpleType name="TierType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="BASIC"/>
+            <xs:enumeration value="SILVER"/>
+            <xs:enumeration value="GOLD"/>
+            <xs:enumeration value="PLATINUM"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="StatusType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="ACTIVE"/>
+            <xs:enumeration value="INACTIVE"/>
+            <xs:enumeration value="SUSPENDED"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

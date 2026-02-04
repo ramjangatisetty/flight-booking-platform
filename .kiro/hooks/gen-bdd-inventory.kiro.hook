@@ -1,0 +1,12 @@
+{
+  "name": "Generate BDD Tests - Inventory",
+  "version": "1.0.0",
+  "description": "Generate or update Cucumber feature files and step definitions for Inventory Service. Manually triggered.",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Follow .kiro/agents/gen-bdd-tests.md with SERVICE=inventory-service MODE=delta to ensure step definitions exist for all scenarios in the inventory feature files. Only add missing step definitions - do not modify existing ones."
+  }
+}

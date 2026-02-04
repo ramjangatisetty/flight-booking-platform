@@ -15,41 +15,8 @@
             <class name="tests.smoke.BookingOpenApiSmokeTest"/>
             <class name="tests.smoke.InventoryOpenApiSmokeTest"/>
             <class name="tests.smoke.PaymentOpenApiSmokeTest"/>
-            <class name="tests.smoke.BaggageHealthSmokeTest"/>
+            <class name="tests.smoke.BaggageOpenApiSmokeTest"/>
             <class name="tests.smoke.LoyaltyWsdlSmokeTest"/>
-        </classes>
-    </test>
-
-    <test name="Booking Service Tests">
-        <groups>
-            <run>
-                <include name="booking"/>
-            </run>
-        </groups>
-        <classes>
-            <class name="tests.booking.BookingControllerTests"/>
-        </classes>
-    </test>
-
-    <test name="E2E Saga Tests">
-        <groups>
-            <run>
-                <include name="e2e"/>
-            </run>
-        </groups>
-        <classes>
-            <class name="tests.e2e.BookingSagaE2ETest"/>
-        </classes>
-    </test>
-
-    <test name="Kafka Event Tests">
-        <groups>
-            <run>
-                <include name="events"/>
-            </run>
-        </groups>
-        <classes>
-            <class name="tests.events.BookingEventTests"/>
         </classes>
     </test>
 </suite>

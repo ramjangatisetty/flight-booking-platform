@@ -1,0 +1,13 @@
+{
+  "name": "Validate Test on Save",
+  "version": "1.0.0",
+  "description": "When a test file is saved, validates it compiles and follows framework conventions.",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["api-tests/src/test/java/tests/**/*.java"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A test file was just saved. Please validate it follows the framework conventions.\n\nCheck:\n1. Uses TestNG annotations (not JUnit)\n2. Uses framework clients (RestAssuredApiClient, SoapClient) - not direct RestAssured\n3. Includes ReportLogger calls for assertions\n4. Has proper test groups (@Test(groups = {...}))\n5. Does NOT import from *.domain.* or *.application.*\n\nReport any violations found."
+  }
+}

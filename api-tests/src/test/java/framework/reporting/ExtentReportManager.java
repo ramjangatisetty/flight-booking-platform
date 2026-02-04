@@ -9,21 +9,15 @@ import framework.config.TestConfig;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-/**
- * Singleton manager for ExtentReports instance.
- */
 public class ExtentReportManager {
-
     private static ExtentReports extent;
-    private static final ThreadLocal<ExtentTest> testThreadLocal = new ThreadLocal<>();
+    private static final ThreadLocal<ExtentTest> testThread = new ThreadLocal<>();
 
-    private ExtentReportManager() {
-        // Singleton
-    }
+    private ExtentReportManager() {}
 
     public static synchronized ExtentReports getInstance() {
         if (extent == null) {
-            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
             String reportPath = "build/reports/extent/extent-report-" + timestamp + ".html";
 
             ExtentSparkReporter spark = new ExtentSparkReporter(reportPath);
@@ -41,19 +35,19 @@ public class ExtentReportManager {
     }
 
     public static ExtentTest createTest(String testName) {
-        ExtentTest test = getInstance().createTest(testName);
-        testThreadLocal.set(test);
-        return test;
+        return createTest(testName, null);
     }
 
     public static ExtentTest createTest(String testName, String description) {
-        ExtentTest test = getInstance().createTest(testName, description);
-        testThreadLocal.set(test);
+        ExtentTest test = description != null
+                ? getInstance().createTest(testName, description)
+                : getInstance().createTest(testName);
+        testThread.set(test);
         return test;
     }
 
     public static ExtentTest getTest() {
-        return testThreadLocal.get();
+        return testThread.get();
     }
 
     public static void flush() {
@@ -63,6 +57,6 @@ public class ExtentReportManager {
     }
 
     public static void removeTest() {
-        testThreadLocal.remove();
+        testThread.remove();
     }
 }

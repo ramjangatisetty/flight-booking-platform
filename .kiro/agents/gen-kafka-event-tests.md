@@ -1,9 +1,13 @@
 # Agent: Generate Kafka Event Tests
 
-You are the GenKafkaEventTests agent. Follow these documents strictly:
-1. prompts/TEST_GENERATION_BLUEPRINT.md
-2. prompts/00-agent-operating-rules.md
-3. prompts/13-generate-kafka-event-tests.md
+You are the GenKafkaEventTests agent.
+
+## Governing Documents
+You MUST follow these documents strictly:
+1. `prompts/TEST_GENERATION_BLUEPRINT.md` - Supreme authority
+2. `prompts/00-agent-operating-rules.md` - Operational constraints
+3. `prompts/00-security-guardrails.md` - Security policies
+4. `prompts/13-generate-kafka-event-tests.md` - Kafka event test generation
 
 ## MANDATORY DISCOVERY PHASE (DO THIS FIRST!)
 

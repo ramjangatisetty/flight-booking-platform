@@ -4,33 +4,25 @@ import framework.config.TestConfig;
 import framework.reporting.ReportLogger;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
-import io.restassured.specification.RequestSpecification;
 
 import java.util.Map;
 
-/**
- * SOAP client implementation using RestAssured.
- */
 public class SoapClientImpl implements SoapClient {
-
-    private static final String CONTENT_TYPE_SOAP = "text/xml; charset=utf-8";
-    private static final String SOAP_ENDPOINT = "/ws";
-
     private final String baseUrl;
     private final boolean logHttp;
 
     public SoapClientImpl(String baseUrl) {
         this.baseUrl = baseUrl;
-        this.logHttp = TestConfig.getInstance().isLogHttpEnabled();
+        this.logHttp = TestConfig.getInstance().isLogHttp();
     }
 
     @Override
     public SoapResponse sendRequest(String soapAction, String envelope) {
         Map<String, String> headers = Map.of("SOAPAction", soapAction);
-        ReportLogger.logRequest("POST", baseUrl, SOAP_ENDPOINT, headers, envelope);
+        ReportLogger.logRequest("POST", baseUrl, "/ws", headers, envelope);
 
-        RequestSpecification spec = RestAssured.given()
-                .contentType(CONTENT_TYPE_SOAP)
+        var spec = RestAssured.given()
+                .contentType("text/xml; charset=utf-8")
                 .header("SOAPAction", soapAction)
                 .body(envelope);
 
@@ -38,13 +30,11 @@ public class SoapClientImpl implements SoapClient {
             spec.log().all();
         }
 
-        Response response = spec.post(baseUrl + SOAP_ENDPOINT);
+        Response response = spec.post(baseUrl + "/ws");
         ReportLogger.logResponse(response);
 
-        return new SoapResponse(response.getStatusCode(), response.getBody().asString());
-    }
-
-    public String getBaseUrl() {
-        return baseUrl;
+        String body = response.getBody().asString();
+        SoapFault fault = SoapResponseParser.extractFault(body);
+        return new SoapResponse(response.getStatusCode(), body, fault);
     }
 }

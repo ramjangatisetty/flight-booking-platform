@@ -14,41 +14,42 @@ IMPORTANT:
 INPUTS
 ====================================================================
 SERVICE: one of
-- booking-service (JSON REST)
-- inventory-service (JSON REST)
-- payment-service (JSON REST)
-- baggage-service (XML REST)
-- loyalty-service (SOAP)
+- booking-service (JSON REST, OpenAPI enabled)
+- inventory-service (JSON REST, OpenAPI enabled)
+- payment-service (JSON REST, OpenAPI enabled, stateless - empty paths)
+- loyalty-service (SOAP, WSDL enabled)
+- baggage-service (XML REST, OpenAPI NOT configured - skip or use XSD)
 
 BASE URL env var mapping:
 - booking-service   -> BASE_URL_BOOKING (default: http://localhost:8081)
 - inventory-service -> BASE_URL_INVENTORY (default: http://localhost:8082)
 - payment-service   -> BASE_URL_PAYMENT (default: http://localhost:8083)
-- baggage-service   -> BASE_URL_BAGGAGE (default: http://localhost:8084)
-- loyalty-service   -> BASE_URL_LOYALTY (default: http://localhost:8085)
+- loyalty-service   -> BASE_URL_LOYALTY (default: http://localhost:8084)
+- baggage-service   -> BASE_URL_BAGGAGE (default: http://localhost:8085)
 
 ====================================================================
 SERVICE TYPE HANDLING
 ====================================================================
 
 ## JSON REST Services (booking, inventory, payment)
-- Fetch OpenAPI JSON from: `<BASE_URL_SERVICE>/api-docs`
+- Fetch OpenAPI JSON from: `<BASE_URL_SERVICE>/v3/api-docs`
 - Save to: `api-tests/src/test/resources/openapi-snapshots/<service>/openapi.json`
+- Note: payment-service is stateless/event-driven, OpenAPI will have empty paths
 
-## XML REST Services (baggage)
-- Fetch OpenAPI JSON from: `<BASE_URL_SERVICE>/api-docs`
-- Save to: `api-tests/src/test/resources/openapi-snapshots/<service>/openapi.json`
-- Note: OpenAPI spec is still JSON, but documents XML content types
-
-## SOAP Services (loyalty)
-- Fetch WSDL from: `<BASE_URL_SERVICE>/ws?wsdl`
+## SOAP Services (loyalty - port 8084)
+- Fetch WSDL from: `<BASE_URL_SERVICE>/ws/loyalty.wsdl`
 - Save to: `api-tests/src/test/resources/wsdl-snapshots/<service>/loyalty.wsdl`
 - Copy XSD from service resources:
   - Source: `services/loyalty-service/src/main/resources/xsd/loyalty.xsd`
   - Dest: `api-tests/src/test/resources/wsdl-snapshots/<service>/loyalty.xsd`
-- Also fetch REST admin OpenAPI (if available):
-  - Fetch from: `<BASE_URL_SERVICE>/api-docs`
-  - Save to: `api-tests/src/test/resources/openapi-snapshots/<service>/openapi.json`
+
+## XML REST Services (baggage - port 8085)
+- **OpenAPI NOT configured** - springdoc dependency not included in build.gradle
+- Contract defined by XSD: `services/baggage-service/src/main/resources/xsd/baggage.xsd`
+- Copy XSD from service resources:
+  - Source: `services/baggage-service/src/main/resources/xsd/baggage.xsd`
+  - Dest: `api-tests/src/test/resources/xsd-snapshots/baggage-service/baggage.xsd`
+- To enable OpenAPI in future: add `springdoc-openapi-starter-webmvc-ui` to baggage-service build.gradle
 
 ====================================================================
 ALLOWED COMMANDS
@@ -107,9 +108,18 @@ EXAMPLE SUMMARY OUTPUT
 ```
 SERVICE: loyalty-service
 Service type: SOAP
-Base URL: http://localhost:8085
+Base URL: http://localhost:8084
 Output paths:
   - api-tests/src/test/resources/wsdl-snapshots/loyalty-service/loyalty.wsdl
   - api-tests/src/test/resources/wsdl-snapshots/loyalty-service/loyalty.xsd
 Content changed: yes
+```
+
+```
+SERVICE: baggage-service
+Service type: XML REST (OpenAPI NOT configured)
+Base URL: http://localhost:8085
+Output paths:
+  - api-tests/src/test/resources/xsd-snapshots/baggage-service/baggage.xsd (copied from source)
+Note: OpenAPI not available - springdoc dependency not configured
 ```

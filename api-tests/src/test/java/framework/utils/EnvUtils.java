@@ -1,13 +1,7 @@
 package framework.utils;
 
-/**
- * Utility class for environment variable access.
- */
 public final class EnvUtils {
-
-    private EnvUtils() {
-        // Utility class
-    }
+    private EnvUtils() {}
 
     public static String getEnv(String name, String defaultValue) {
         String value = System.getenv(name);
@@ -23,7 +17,6 @@ public final class EnvUtils {
     }
 
     public static boolean isLocal() {
-        String env = getEnv("ENV", "local");
-        return "local".equalsIgnoreCase(env);
+        return "local".equalsIgnoreCase(getEnv("ENV", "local"));
     }
 }

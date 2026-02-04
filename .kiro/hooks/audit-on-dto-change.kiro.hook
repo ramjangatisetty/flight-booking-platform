@@ -1,0 +1,13 @@
+{
+  "name": "Check Test Models on DTO Change",
+  "version": "1.0.0",
+  "description": "When a service DTO changes, checks if the corresponding test model needs updating to stay in sync.",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["services/*/src/main/java/**/dto/*.java"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A DTO file was just modified. Please check if the test framework models need updating.\n\n1. Identify the modified DTO from the file path\n2. Compare with corresponding model in api-tests/src/test/java/framework/models/\n3. Report if fields are out of sync\n4. Suggest updates if needed (but do NOT auto-apply)\n\nThis is an audit - report findings only."
+  }
+}

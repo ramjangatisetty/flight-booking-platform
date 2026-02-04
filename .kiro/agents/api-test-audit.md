@@ -18,6 +18,8 @@ When invoking this agent, specify:
 You MUST follow these documents strictly:
 1. `prompts/TEST_GENERATION_BLUEPRINT.md` - Supreme authority
 2. `prompts/00-agent-operating-rules.md` - Operational constraints
+3. `prompts/00-security-guardrails.md` - Security policies
+2. `prompts/00-agent-operating-rules.md` - Operational constraints
 3. `prompts/gentests.md` - Audit report template
 
 ## Task

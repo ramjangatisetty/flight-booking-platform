@@ -1,10 +1,6 @@
 package framework.models.common;
 
-/**
- * Standard error response model for REST services.
- */
 public class ErrorResponse {
-
     private String timestamp;
     private int status;
     private String error;
@@ -12,8 +8,7 @@ public class ErrorResponse {
     private String path;
     private String correlationId;
 
-    public ErrorResponse() {
-    }
+    public ErrorResponse() {}
 
     public String getTimestamp() {
         return timestamp;
@@ -61,16 +56,5 @@ public class ErrorResponse {
 
     public void setCorrelationId(String correlationId) {
         this.correlationId = correlationId;
-    }
-
-    @Override
-    public String toString() {
-        return "ErrorResponse{" +
-                "status=" + status +
-                ", error='" + error + '\'' +
-                ", message='" + message + '\'' +
-                ", path='" + path + '\'' +
-                ", correlationId='" + correlationId + '\'' +
-                '}';
     }
 }

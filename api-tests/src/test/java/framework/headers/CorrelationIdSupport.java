@@ -1,23 +1,16 @@
 package framework.headers;
 
-import framework.utils.UuidUtils;
-
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
-/**
- * Utility for managing X-Correlation-Id headers.
- */
 public final class CorrelationIdSupport {
-
     public static final String HEADER_NAME = "X-Correlation-Id";
 
-    private CorrelationIdSupport() {
-        // Utility class
-    }
+    private CorrelationIdSupport() {}
 
     public static String generate() {
-        return UuidUtils.generate();
+        return UUID.randomUUID().toString();
     }
 
     public static Map<String, String> withCorrelationId(Map<String, String> headers) {
@@ -25,10 +18,7 @@ public final class CorrelationIdSupport {
     }
 
     public static Map<String, String> withCorrelationId(Map<String, String> headers, String correlationId) {
-        Map<String, String> result = new HashMap<>();
-        if (headers != null) {
-            result.putAll(headers);
-        }
+        Map<String, String> result = new HashMap<>(headers != null ? headers : Map.of());
         result.put(HEADER_NAME, correlationId);
         return result;
     }

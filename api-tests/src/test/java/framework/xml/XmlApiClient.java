@@ -9,27 +9,19 @@ import io.restassured.specification.RequestSpecification;
 
 import java.util.Map;
 
-/**
- * XML REST API client implementation.
- * Sets Content-Type and Accept to application/xml.
- */
 public class XmlApiClient implements ApiClient {
-
-    private static final String CONTENT_TYPE_XML = "application/xml";
-
     private final String baseUrl;
     private final boolean logHttp;
 
     public XmlApiClient(String baseUrl) {
         this.baseUrl = baseUrl;
-        this.logHttp = TestConfig.getInstance().isLogHttpEnabled();
+        this.logHttp = TestConfig.getInstance().isLogHttp();
     }
 
     @Override
     public Response get(String path, Map<String, String> headers) {
         ReportLogger.logRequest("GET", baseUrl, path, headers, null);
-        Response response = buildRequest(headers)
-                .get(baseUrl + path);
+        Response response = buildRequest(headers).get(baseUrl + path);
         ReportLogger.logResponse(response);
         return response;
     }
@@ -37,9 +29,7 @@ public class XmlApiClient implements ApiClient {
     @Override
     public Response post(String path, Map<String, String> headers, Object body) {
         ReportLogger.logRequest("POST", baseUrl, path, headers, body);
-        Response response = buildRequest(headers)
-                .body(body != null ? body.toString() : "")
-                .post(baseUrl + path);
+        Response response = buildRequest(headers).body(body).post(baseUrl + path);
         ReportLogger.logResponse(response);
         return response;
     }
@@ -47,9 +37,7 @@ public class XmlApiClient implements ApiClient {
     @Override
     public Response put(String path, Map<String, String> headers, Object body) {
         ReportLogger.logRequest("PUT", baseUrl, path, headers, body);
-        Response response = buildRequest(headers)
-                .body(body != null ? body.toString() : "")
-                .put(baseUrl + path);
+        Response response = buildRequest(headers).body(body).put(baseUrl + path);
         ReportLogger.logResponse(response);
         return response;
     }
@@ -57,9 +45,7 @@ public class XmlApiClient implements ApiClient {
     @Override
     public Response patch(String path, Map<String, String> headers, Object body) {
         ReportLogger.logRequest("PATCH", baseUrl, path, headers, body);
-        Response response = buildRequest(headers)
-                .body(body != null ? body.toString() : "")
-                .patch(baseUrl + path);
+        Response response = buildRequest(headers).body(body).patch(baseUrl + path);
         ReportLogger.logResponse(response);
         return response;
     }
@@ -67,29 +53,21 @@ public class XmlApiClient implements ApiClient {
     @Override
     public Response delete(String path, Map<String, String> headers) {
         ReportLogger.logRequest("DELETE", baseUrl, path, headers, null);
-        Response response = buildRequest(headers)
-                .delete(baseUrl + path);
+        Response response = buildRequest(headers).delete(baseUrl + path);
         ReportLogger.logResponse(response);
         return response;
     }
 
     private RequestSpecification buildRequest(Map<String, String> headers) {
         RequestSpecification spec = RestAssured.given()
-                .contentType(CONTENT_TYPE_XML)
-                .accept(CONTENT_TYPE_XML);
-
-        if (headers != null && !headers.isEmpty()) {
-            spec.headers(headers);
+                .contentType("application/xml")
+                .accept("application/xml");
+        if (headers != null) {
+            headers.forEach(spec::header);
         }
-
         if (logHttp) {
             spec.log().all();
         }
-
         return spec;
-    }
-
-    public String getBaseUrl() {
-        return baseUrl;
     }
 }

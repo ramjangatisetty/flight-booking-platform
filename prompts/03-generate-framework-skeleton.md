@@ -13,37 +13,31 @@ You are NOT allowed to run build, test, or system commands.
 Output ONLY diffs.
 
 --------------------------------
+PARAMETERS
+--------------------------------
+- **TYPE**: testng (default) | bdd | all
+
+| TYPE | Description | What Gets Created |
+|------|-------------|-------------------|
+| `testng` | Traditional TestNG framework only | Core framework + smoke tests (no `bdd/` package, no `features/`) |
+| `bdd` | BDD/Cucumber infrastructure only | `bdd/` package + `features/` directories (assumes core framework exists) |
+| `all` | Both TestNG and BDD | Everything - core framework, smoke tests, BDD infrastructure |
+
+--------------------------------
 MODULE BOOTSTRAP RULE
 --------------------------------
 - If `api-tests` module does NOT exist:
-    - Create it fully as described below
+    - Create it fully as described below based on TYPE parameter
 - If `api-tests` module already exists:
-    - Modify ONLY the required framework classes
+    - Modify ONLY the required framework classes based on TYPE
     - Do NOT recreate the module or overwrite existing files unless necessary
 
 --------------------------------
-DEPENDENCIES (if creating module)
+DEPENDENCIES BY TYPE
 --------------------------------
-1) Create a new Gradle module named `api-tests`
-2) Update `settings.gradle` to include `"api-tests"`
-3) Create `api-tests/build.gradle` (Groovy DSL) with:
-    - plugins { id 'java' }
-    - repositories { mavenCentral() }
-    - dependencies:
-        - testImplementation 'io.rest-assured:rest-assured:5.5.0'
-        - testImplementation 'org.testng:testng:7.10.2'
-        - testImplementation 'io.cucumber:cucumber-java:7.18.1' (for BDD)
-        - testImplementation 'io.cucumber:cucumber-testng:7.18.1' (for BDD)
-        - testImplementation 'org.assertj:assertj-core:3.26.3'
-        - testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
-        - testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2'
-        - testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.17.2' (for XML REST)
-        - testImplementation 'com.aventstack:extentreports:5.1.2' (for reporting)
-        - testImplementation 'org.slf4j:slf4j-simple:2.0.16'
-    - tasks.test { useTestNG { suites 'src/test/resources/testng.xml' } }
-    - IMPORTANT: Use testng.xml suite file to enable ExtentReports listener
 
-Example build.gradle:
+### TYPE=testng (default)
+Create `api-tests/build.gradle` (Groovy DSL) with:
 ```groovy
 plugins {
     id 'java'
@@ -62,8 +56,6 @@ java {
 dependencies {
     testImplementation 'io.rest-assured:rest-assured:5.5.0'
     testImplementation 'org.testng:testng:7.10.2'
-    testImplementation 'io.cucumber:cucumber-java:7.18.1'
-    testImplementation 'io.cucumber:cucumber-testng:7.18.1'
     testImplementation 'org.assertj:assertj-core:3.26.3'
     testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
     testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2'
@@ -79,13 +71,122 @@ tasks.test {
 }
 ```
 
---------------------------------
-FRAMEWORK STRUCTURE (MANDATORY)
---------------------------------
-Create or update the following packages under:
-`api-tests/src/test/java/framework`
+### TYPE=bdd (add to existing build.gradle)
 
-## A) framework/config
+**AUTO-BOOTSTRAP**: If core framework doesn't exist, create it first.
+
+Check if these files exist:
+- `api-tests/build.gradle`
+- `api-tests/src/test/java/framework/clients/ApiClient.java`
+- `api-tests/src/test/java/framework/config/TestConfig.java`
+
+If these files do NOT exist:
+1. First, create the FULL core framework (same as TYPE=testng section above)
+2. Include Cucumber dependencies in the initial build.gradle
+3. Then proceed with BDD infrastructure below
+
+If these files already exist, add these dependencies to existing build.gradle:
+```groovy
+    // JUnit 5 Platform for Cucumber
+    testImplementation platform('org.junit:junit-bom:5.10.3')
+    testImplementation 'org.junit.platform:junit-platform-suite'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    
+    // Cucumber with JUnit Platform (industry standard)
+    testImplementation 'io.cucumber:cucumber-java:7.18.1'
+    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.18.1'
+    testImplementation 'io.cucumber:cucumber-picocontainer:7.18.1'
+    
+    // ExtentReports Cucumber Adapter
+    testImplementation 'tech.grasshopper:extentreports-cucumber7-adapter:1.14.0'
+```
+
+### TYPE=all
+Include ALL dependencies from both testng and bdd:
+```groovy
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+dependencies {
+    // REST API Testing
+    testImplementation 'io.rest-assured:rest-assured:5.5.0'
+    
+    // TestNG for smoke tests
+    testImplementation 'org.testng:testng:7.10.2'
+    
+    // JUnit 5 Platform for Cucumber
+    testImplementation platform('org.junit:junit-bom:5.10.3')
+    testImplementation 'org.junit.platform:junit-platform-suite'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    
+    // Cucumber with JUnit Platform (industry standard)
+    testImplementation 'io.cucumber:cucumber-java:7.18.1'
+    testImplementation 'io.cucumber:cucumber-junit-platform-engine:7.18.1'
+    testImplementation 'io.cucumber:cucumber-picocontainer:7.18.1'
+    
+    // Assertions
+    testImplementation 'org.assertj:assertj-core:3.26.3'
+    
+    // JSON/XML Processing
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
+    testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2'
+    testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.17.2'
+    
+    // Reporting
+    testImplementation 'com.aventstack:extentreports:5.1.2'
+    testImplementation 'tech.grasshopper:extentreports-cucumber7-adapter:1.14.0'
+    
+    // Logging
+    testImplementation 'org.slf4j:slf4j-simple:2.0.16'
+}
+
+// Smoke tests use TestNG
+tasks.register('smokeTest', Test) {
+    description = 'Runs smoke tests with TestNG'
+    group = 'verification'
+    useTestNG {
+        suites 'src/test/resources/testng.xml'
+    }
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+}
+
+// Cucumber BDD tests use JUnit Platform
+tasks.register('cucumberTest', Test) {
+    description = 'Runs Cucumber BDD tests with JUnit Platform'
+    group = 'verification'
+    useJUnitPlatform()
+    include '**/CucumberTest.class'
+    systemProperty 'cucumber.junit-platform.naming-strategy', 'long'
+}
+
+// Default test task runs both
+tasks.test {
+    dependsOn smokeTest, cucumberTest
+    enabled = false
+}
+```
+
+--------------------------------
+FRAMEWORK STRUCTURE BY TYPE
+--------------------------------
+
+## TYPE=testng - Core Framework Packages
+
+Create these packages under `api-tests/src/test/java/framework/`:
+
+### A) framework/config
 - ServiceType (enum)
     - BOOKING, INVENTORY, PAYMENT, BAGGAGE, LOYALTY
 
@@ -136,11 +237,11 @@ Create or update the following packages under:
     - abstract String build() → returns XML string
 
 - BaggageCheckinXmlBuilder extends XmlRequestBuilder
-    - withBookingId(String)
-    - withPassengerId(String)
-    - withBagTag(String)
-    - withOrigin(String)
-    - withDestination(String)
+    - withBookingId(String) - required
+    - withPassengerId(String) - required
+    - withBagTag(String) - required, pattern [A-Z]{2}[0-9]{8}
+    - withOrigin(String) - required, 3-letter airport code
+    - withDestination(String) - required, 3-letter airport code
     - build() → XML string with namespace
 
 - BaggageStatusUpdateXmlBuilder extends XmlRequestBuilder
@@ -347,7 +448,37 @@ Create or update the following packages under:
     - static FailureConfig disabled()
     - Map<String, Object> toMap()
 
-## M) framework/reporting
+## M) framework/kafka (for Kafka event testing)
+- KafkaTestConfig
+    - static String getBootstrapServers() → KAFKA_BOOTSTRAP_SERVERS or localhost:9092
+    - static int getDefaultTimeoutSeconds() → KAFKA_TIMEOUT_SECONDS or 10
+    - static int getSagaTimeoutSeconds() → KAFKA_SAGA_TIMEOUT_SECONDS or 30
+
+- ConsumedEvent (record)
+    - String topic
+    - String key
+    - String rawValue
+    - JsonNode json
+    - String eventType (from meta.eventType)
+    - String correlationId (from meta.correlationId)
+    - long timestamp
+    - JsonNode getData() → returns data section
+    - JsonNode getMeta() → returns meta section
+    - String getEventId() → returns meta.eventId
+    - String getProducer() → returns meta.producer
+
+- TestKafkaConsumer (implements AutoCloseable)
+    - constructor(String topic) or constructor(List<String> topics)
+    - creates consumer with unique group ID per test run
+    - AUTO_OFFSET_RESET_CONFIG = "earliest"
+    - void clearBuffer() → clears consumed events
+    - Optional<ConsumedEvent> waitForEvent(String correlationId, Duration timeout)
+    - Optional<ConsumedEvent> waitForEventOfType(String eventType, String correlationId, Duration timeout)
+    - List<ConsumedEvent> getAllEvents()
+    - List<ConsumedEvent> getEventsByCorrelationId(String correlationId)
+    - void close() → stops polling thread and closes consumer
+
+## N) framework/reporting
 - ExtentReportManager (singleton)
     - static ExtentReports getInstance()
     - static ExtentTest createTest(String testName)
@@ -393,14 +524,19 @@ Create or update the following packages under:
     - JSON bodies are automatically pretty-printed for readability
     - XML bodies are formatted with basic indentation
 
-## N) framework/bdd
+## N) framework/bdd (TYPE=bdd or TYPE=all ONLY)
+
+**Skip this section if TYPE=testng**
+
 - TestContext
     - Shared context for Cucumber step definitions
     - Stores: headers, lastResponse, lastSoapResponse, lastRequestBody
-    - Methods: setClient(), getClient(), setSoapClient(), getSoapClient()
+    - Methods: setClient(), getClient(), setXmlClient(), setSoapClient(), getSoapClient()
     - Methods: setHeader(), getHeaders(), clearHeaders()
     - Methods: set(key, value), get(key), getString(key)
     - Method: reset() → clears all state for new scenario
+    - Note: setClient() always uses RestAssuredApiClient (JSON)
+    - Note: setXmlClient() switches to XmlApiClient for XML requests
 
 - CommonStepDefinitions
     - Implements canonical step vocabulary from GHERKIN_STYLE_GUIDE.md
@@ -410,14 +546,18 @@ Create or update the following packages under:
     - Assertion steps: "Then the response status should be {status}"
     - Capture steps: "And I capture {jsonPath} as {var}"
 
-- CucumberTestRunner (extends AbstractTestNGCucumberTests)
-    - @CucumberOptions with features, glue, plugins
-    - Integrates with ExtentReports via adapter
-    - Parallel execution support
+- CucumberTest (JUnit 5 Platform Suite - industry standard)
+    - Uses @Suite, @IncludeEngines("cucumber"), @SelectClasspathResource("features")
+    - @ConfigurationParameter for glue, plugins, tags
+    - Integrates with ExtentReports via extentreports-cucumber7-adapter
+    - Parallel execution support via @DataProvider
 
 --------------------------------
-SMOKE TESTS (Create these)
+SMOKE TESTS (TYPE=testng or TYPE=all ONLY)
 --------------------------------
+
+**Skip this section if TYPE=bdd**
+
 Create smoke tests under `api-tests/src/test/java/tests/smoke/`:
 
 IMPORTANT: 
@@ -501,8 +641,10 @@ public class BookingOpenApiSmokeTest {
     - Asserts response body contains "wsdl:definitions" or "definitions"
 
 --------------------------------
-RESOURCE DIRECTORIES
+RESOURCE DIRECTORIES BY TYPE
 --------------------------------
+
+### TYPE=testng
 Create these directories:
 - api-tests/src/test/resources/openapi-snapshots/booking-service/
 - api-tests/src/test/resources/openapi-snapshots/inventory-service/
@@ -510,9 +652,23 @@ Create these directories:
 - api-tests/src/test/resources/openapi-snapshots/baggage-service/
 - api-tests/src/test/resources/wsdl-snapshots/loyalty-service/
 
+### TYPE=bdd
+Create these directories:
+- api-tests/src/test/resources/features/booking-service/
+- api-tests/src/test/resources/features/inventory-service/
+- api-tests/src/test/resources/features/payment-service/
+- api-tests/src/test/resources/features/baggage-service/
+- api-tests/src/test/resources/features/loyalty-service/
+
+### TYPE=all
+Create ALL directories from both testng and bdd.
+
 --------------------------------
-TESTNG CONFIGURATION
+TESTNG CONFIGURATION (TYPE=testng or TYPE=all)
 --------------------------------
+
+**Skip this section if TYPE=bdd**
+
 Create `api-tests/src/test/resources/testng.xml`:
 - Register ExtentTestListener
 - Define test suites for smoke tests
@@ -554,8 +710,11 @@ Example structure:
 ```
 
 --------------------------------
-GHERKIN FEATURE FILES
+GHERKIN FEATURE FILES (TYPE=bdd or TYPE=all ONLY)
 --------------------------------
+
+**Skip this section if TYPE=testng**
+
 Create feature file directories:
 - api-tests/src/test/resources/features/booking-service/
 - api-tests/src/test/resources/features/inventory-service/
@@ -570,15 +729,24 @@ Create sample feature files following GHERKIN_STYLE_GUIDE.md:
 - Use category tags (@smoke, @happyPath, @negative)
 
 --------------------------------
-EXTENT REPORTS CONFIGURATION
+EXTENT REPORTS CONFIGURATION (TYPE=bdd or TYPE=all ONLY)
 --------------------------------
+
+**Skip this section if TYPE=testng**
+
 Create `api-tests/src/test/resources/extent.properties`:
 ```properties
 extent.reporter.spark.start=true
-extent.reporter.spark.out=build/reports/extent/extent-cucumber-report.html
+extent.reporter.spark.out=build/reports/cucumber/extent-cucumber-report.html
 extent.reporter.spark.config=src/test/resources/extent-config.xml
-systeminfo.Environment=${ENV:local}
+
+screenshot.dir=build/reports/cucumber/screenshots/
+screenshot.rel.path=screenshots/
+
+systeminfo.Environment=local
 systeminfo.Application=Flight Booking Platform
+systeminfo.OS=${os.name}
+systeminfo.Java=${java.version}
 ```
 
 Create `api-tests/src/test/resources/extent-config.xml`:
@@ -596,8 +764,10 @@ Create `api-tests/src/test/resources/extent-config.xml`:
 --------------------------------
 STRICT RULES
 --------------------------------
-- Do NOT create service-specific functional tests (only smoke tests)
-- Do NOT use JUnit
+- Respect TYPE parameter: only create components specified for that TYPE
+- Do NOT create `bdd/` package or `features/` directories if TYPE=testng
+- Do NOT create smoke tests if TYPE=bdd (assumes they already exist)
+- Do NOT create service-specific functional tests (only smoke tests for TYPE=testng/all)
 - Do NOT access domain/application packages
 - Do NOT leave methods unimplemented
 - Do NOT invent additional abstractions beyond what's specified
@@ -607,6 +777,8 @@ STRICT RULES
 - JSON REST uses RestAssuredApiClient
 - ALWAYS use @BeforeClass(alwaysRun = true) when tests use groups
 - ALWAYS configure Gradle to use testng.xml suite file for ExtentReports
+- Use JUnit 5 Platform for Cucumber (industry standard), NOT TestNG
+- Use cucumber-picocontainer for dependency injection in step definitions
 
 
 --------------------------------

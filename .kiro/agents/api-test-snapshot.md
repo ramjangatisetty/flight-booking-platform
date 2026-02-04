@@ -17,7 +17,8 @@ When invoking this agent, specify:
 You MUST follow these documents strictly:
 1. `prompts/TEST_GENERATION_BLUEPRINT.md` - Supreme authority
 2. `prompts/00-agent-operating-rules.md` - Operational constraints
-3. `prompts/09-snapshot-refresh.md` - Snapshot refresh process
+3. `prompts/00-security-guardrails.md` - Security policies
+4. `prompts/09-snapshot-refresh.md` - Snapshot refresh process
 
 ## Prerequisites
 - Target service must be running

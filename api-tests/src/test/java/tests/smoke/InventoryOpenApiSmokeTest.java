@@ -13,11 +13,7 @@ import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Smoke test for Inventory Service OpenAPI docs endpoint.
- */
 public class InventoryOpenApiSmokeTest {
-
     private ApiClient client;
 
     @BeforeClass(alwaysRun = true)

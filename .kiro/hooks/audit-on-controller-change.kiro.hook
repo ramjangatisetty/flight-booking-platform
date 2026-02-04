@@ -1,0 +1,13 @@
+{
+  "name": "Audit Tests on Controller Change",
+  "version": "1.0.0",
+  "description": "Automatically audits API test coverage when a controller file is modified. Helps identify missing tests after API changes.",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["services/*/src/main/java/**/controller/*.java"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A controller file was just modified. Please audit the API test coverage for the affected service.\n\nFollow prompts/TEST_GENERATION_BLUEPRINT.md in MODE=audit.\n\n1. Identify which service was modified from the file path\n2. Read the modified controller to understand the endpoints\n3. Check if corresponding tests exist in api-tests/src/test/java/tests/\n4. Report any missing test coverage\n\nOutput a brief coverage report - do NOT generate code, just identify gaps."
+  }
+}

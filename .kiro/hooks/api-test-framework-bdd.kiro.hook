@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Generate Test Framework (BDD)",
+  "description": "Add BDD/Cucumber infrastructure. If core framework doesn't exist, creates it automatically first.",
+  "version": "2",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Follow .kiro/agents/api-test-framework.md with TYPE=bdd\n\nThis adds BDD/Cucumber infrastructure. If core framework doesn't exist, it will be created automatically first.\n\nTASK:\n1. Check if core framework exists (build.gradle, ApiClient.java, TestConfig.java)\n2. If NOT exists: Create full core framework first, then add BDD\n3. If exists: Add Cucumber dependencies to existing build.gradle\n4. Create framework/bdd/ package with:\n   - TestContext.java\n   - CommonStepDefinitions.java\n   - BookingStepDefinitions.java\n   - SoapStepDefinitions.java\n   - XmlStepDefinitions.java\n   - CucumberTestRunner.java\n5. Create features/ directories for each service\n6. Create extent.properties and extent-config.xml for Cucumber reporting\n\nOUTPUT: Diffs only."
+  }
+}

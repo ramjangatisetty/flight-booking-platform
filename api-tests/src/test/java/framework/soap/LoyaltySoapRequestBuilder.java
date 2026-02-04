@@ -1,59 +1,39 @@
 package framework.soap;
 
-/**
- * Builder for Loyalty Service SOAP request payloads.
- */
-public final class LoyaltySoapRequestBuilder {
-
-    public static final String NAMESPACE = "http://letzautomate.com/loyalty/v1";
-
-    private LoyaltySoapRequestBuilder() {
-        // Utility class
-    }
+public class LoyaltySoapRequestBuilder {
+    private static final String NAMESPACE = "http://letzautomate.com/loyalty/v1";
 
     public static String enrollMember(String firstName, String lastName, String email) {
-        String body = String.format(
-                "<ns:EnrollMemberRequest xmlns:ns=\"%s\">" +
-                        "<ns:firstName>%s</ns:firstName>" +
-                        "<ns:lastName>%s</ns:lastName>" +
-                        "<ns:email>%s</ns:email>" +
-                        "</ns:EnrollMemberRequest>",
-                NAMESPACE, firstName, lastName, email
-        );
-        return new SoapEnvelopeBuilder()
-                .withNamespace(NAMESPACE)
-                .withBody(body)
-                .build();
+        String body = """
+            <loy:EnrollMemberRequest>
+                <loy:firstName>%s</loy:firstName>
+                <loy:lastName>%s</loy:lastName>
+                <loy:email>%s</loy:email>
+            </loy:EnrollMemberRequest>
+            """.formatted(firstName, lastName, email);
+        return new SoapEnvelopeBuilder().withNamespace(NAMESPACE).withBody(body).build();
     }
 
     public static String getMemberStatus(String memberId) {
-        String body = String.format(
-                "<ns:GetMemberStatusRequest xmlns:ns=\"%s\">" +
-                        "<ns:memberId>%s</ns:memberId>" +
-                        "</ns:GetMemberStatusRequest>",
-                NAMESPACE, memberId
-        );
-        return new SoapEnvelopeBuilder()
-                .withNamespace(NAMESPACE)
-                .withBody(body)
-                .build();
+        String body = """
+            <loy:GetMemberStatusRequest>
+                <loy:memberId>%s</loy:memberId>
+            </loy:GetMemberStatusRequest>
+            """.formatted(memberId);
+        return new SoapEnvelopeBuilder().withNamespace(NAMESPACE).withBody(body).build();
     }
 
-    public static String accruePoints(String memberId, String bookingId, String amount, String currency, String correlationId) {
-        StringBuilder body = new StringBuilder();
-        body.append(String.format("<ns:AccruePointsRequest xmlns:ns=\"%s\">", NAMESPACE));
-        body.append(String.format("<ns:memberId>%s</ns:memberId>", memberId));
-        body.append(String.format("<ns:bookingId>%s</ns:bookingId>", bookingId));
-        body.append(String.format("<ns:amount>%s</ns:amount>", amount));
-        body.append(String.format("<ns:currency>%s</ns:currency>", currency));
-        if (correlationId != null && !correlationId.isBlank()) {
-            body.append(String.format("<ns:correlationId>%s</ns:correlationId>", correlationId));
-        }
-        body.append("</ns:AccruePointsRequest>");
-
-        return new SoapEnvelopeBuilder()
-                .withNamespace(NAMESPACE)
-                .withBody(body.toString())
-                .build();
+    public static String accruePoints(String memberId, String bookingId, String amount,
+                                       String currency, String correlationId) {
+        String body = """
+            <loy:AccruePointsRequest>
+                <loy:memberId>%s</loy:memberId>
+                <loy:bookingId>%s</loy:bookingId>
+                <loy:amount>%s</loy:amount>
+                <loy:currency>%s</loy:currency>
+                <loy:correlationId>%s</loy:correlationId>
+            </loy:AccruePointsRequest>
+            """.formatted(memberId, bookingId, amount, currency, correlationId);
+        return new SoapEnvelopeBuilder().withNamespace(NAMESPACE).withBody(body).build();
     }
 }

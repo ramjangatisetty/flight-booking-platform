@@ -1,23 +1,16 @@
 package framework.headers;
 
-import framework.utils.UuidUtils;
-
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
-/**
- * Utility for managing Idempotency-Key headers.
- */
 public final class IdempotencyKeySupport {
-
     public static final String HEADER_NAME = "Idempotency-Key";
 
-    private IdempotencyKeySupport() {
-        // Utility class
-    }
+    private IdempotencyKeySupport() {}
 
     public static String generate() {
-        return UuidUtils.generate();
+        return UUID.randomUUID().toString();
     }
 
     public static Map<String, String> withIdempotencyKey(Map<String, String> headers) {
@@ -25,10 +18,7 @@ public final class IdempotencyKeySupport {
     }
 
     public static Map<String, String> withIdempotencyKey(Map<String, String> headers, String key) {
-        Map<String, String> result = new HashMap<>();
-        if (headers != null) {
-            result.putAll(headers);
-        }
+        Map<String, String> result = new HashMap<>(headers != null ? headers : Map.of());
         result.put(HEADER_NAME, key);
         return result;
     }

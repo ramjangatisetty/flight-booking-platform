@@ -32,6 +32,22 @@ Event-driven microservices platform for airline seat reservations using saga pat
 - **Publishes**: `payment.succeeded.v1`, `payment.failed.v1`
 - **Consumes**: `payment.requested.v1`
 
+### Loyalty Service (Port 8084) - SOAP
+- **Responsibility**: Loyalty program management (member enrollment, points accrual)
+- **Protocol**: SOAP/XML over HTTP
+- **WSDL**: `http://localhost:8084/ws/loyalty.wsdl`
+- **XSD**: `services/loyalty-service/src/main/resources/xsd/loyalty.xsd`
+- **Operations**: EnrollMember, GetMemberStatus, AccruePoints
+- **Consumes**: `booking.confirmed.v1` (for automatic points accrual)
+
+### Baggage Service (Port 8085) - XML REST
+- **Responsibility**: Baggage check-in and tracking
+- **Protocol**: XML REST (application/xml content type)
+- **XSD**: `services/baggage-service/src/main/resources/xsd/baggage.xsd`
+- **Note**: OpenAPI NOT configured (no springdoc dependency)
+- **Exposes**: XML REST API for baggage check-in, status, tracking
+- **Consumes**: `booking.confirmed.v1` (for baggage allowance)
+
 ## Saga Orchestration Pattern
 
 The booking workflow implements a choreography-based saga:

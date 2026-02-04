@@ -1,0 +1,12 @@
+{
+  "name": "Generate BDD Tests - Loyalty",
+  "version": "1.0.0",
+  "description": "Generate or update Cucumber feature files and step definitions for Loyalty Service (SOAP). Manually triggered.",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Follow .kiro/agents/gen-bdd-tests.md with SERVICE=loyalty-service MODE=delta to ensure step definitions exist for all scenarios in the loyalty feature files. Loyalty service uses SOAP - ensure SoapStepDefinitions are used. Only add missing step definitions - do not modify existing ones."
+  }
+}

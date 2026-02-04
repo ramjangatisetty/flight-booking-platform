@@ -27,6 +27,7 @@
 | LOYALTY-TESTS | 11-generate-loyalty-tests.md | 1.0.0 | Active | 2024-01-20 |
 | E2E-SAGA | 12-generate-e2e-saga-tests.md | 2.1.0 | Active | 2026-02-03 |
 | KAFKA-EVENTS | 13-generate-kafka-event-tests.md | 2.0.0 | Active | 2026-02-03 |
+| BDD-KAFKA | 14-generate-bdd-kafka-tests.md | 1.0.0 | Active | 2026-02-04 |
 
 ---
 
@@ -173,7 +174,10 @@ Place agent prompts in `.kiro/agents/` for Kiro to discover and execute them:
 │   ├── api-test-inventory.md
 │   ├── api-test-baggage.md
 │   ├── api-test-loyalty.md
-│   └── api-test-snapshot.md
+│   ├── api-test-snapshot.md
+│   ├── gen-bdd-tests.md
+│   ├── gen-bdd-kafka-tests.md
+│   └── gen-kafka-event-tests.md
 └── specs/
     └── api-test-automation-framework/
         ├── requirements.md
@@ -247,6 +251,16 @@ Kiro agents in `.kiro/agents/` can reference these prompts or include them inlin
 ---
 
 ## 7. Change Log
+
+### v2.2.0 (2026-02-04)
+- Added BDD/Cucumber support for Kafka event testing
+- New prompt: 14-generate-bdd-kafka-tests.md
+- New agent: .kiro/agents/gen-bdd-kafka-tests.md
+- New hook: .kiro/hooks/gen-bdd-kafka-tests.kiro.hook
+- New framework components: framework/kafka/ (TestKafkaConsumer, ConsumedEvent, KafkaTestConfig)
+- New step definitions: framework/bdd/KafkaStepDefinitions.java
+- New feature files: features/{service}-service/events.feature
+- Added kafka-clients:3.7.0 dependency to api-tests/build.gradle
 
 ### v2.1.0 (2026-02-03)
 - **CRITICAL**: Added mandatory cross-service integration discovery phase

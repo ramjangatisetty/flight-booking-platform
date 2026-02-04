@@ -184,3 +184,8 @@ All events follow the `EventEnvelope<T>` structure with `meta` and `data` sectio
 - Clear buffer before tests that need fresh events: `kafkaConsumer.clearBuffer()`
 - For saga completion tests, verify intermediate events first (e.g., `inventory.reserve.requested`) before waiting for final events
 - Output diffs only
+
+## BDD Alternative
+
+For Cucumber/Gherkin-style Kafka event tests, see `14-generate-bdd-kafka-tests.md`.
+BDD tests provide business-readable scenarios using the same underlying framework components.
